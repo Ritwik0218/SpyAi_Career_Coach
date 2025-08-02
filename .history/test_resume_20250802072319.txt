@@ -1,0 +1,17 @@
+John Doe
+Senior Software Engineer
+
+EXPERIENCE
+Software Engineer at Tech Corp (2020-2024)
+- Developed web applications using React and Node.js
+- Implemented automated testing strategies
+- Led team of 5 developers
+
+EDUCATION
+Bachelor of Computer Science, University XYZ (2016-2020)
+
+SKILLS
+- JavaScript, TypeScript, React, Node.js
+- Python, Java, C++
+- AWS, Docker, Kubernetes
+- Git, CI/CD, Agile methodologies
