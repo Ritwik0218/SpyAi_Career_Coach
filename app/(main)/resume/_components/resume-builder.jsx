@@ -15,7 +15,7 @@ import {
   Target,
 } from "lucide-react";
 import { toast } from "sonner";
-import MDEditor from "@uiw/react-md-editor";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,9 +27,14 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
-import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 import { ATSOptimizer } from "./ats-optimizer";
 import { QuickATSScore } from "./quick-ats-score";
+
+// Dynamic imports for client-side only libraries
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-muted animate-pulse rounded" />
+});
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -270,6 +275,9 @@ export default function ResumeBuilder({ initialContent }) {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      // Dynamic import for html2pdf
+      const html2pdf = (await import("html2pdf.js/dist/html2pdf.min.js")).default;
+      
       const element = document.getElementById("resume-pdf");
       const opt = {
         margin: [15, 15],
@@ -282,6 +290,7 @@ export default function ResumeBuilder({ initialContent }) {
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }

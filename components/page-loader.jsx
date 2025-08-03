@@ -3,20 +3,22 @@
 import { useLoading } from "./loading-provider";
 import { Loader2, Brain, Zap, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ClientOnly } from "./client-only";
 
 export function PageLoader() {
   const { isLoading, loadingProgress, routeInfo } = useLoading();
 
   return (
-    <AnimatePresence>
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md"
-        >
+    <ClientOnly fallback={null}>
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md"
+          >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -138,5 +140,6 @@ export function PageLoader() {
         </motion.div>
       )}
     </AnimatePresence>
+    </ClientOnly>
   );
 }

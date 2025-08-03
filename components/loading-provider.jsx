@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ClientOnly } from "./client-only";
 
 const LoadingContext = createContext({
   isLoading: false,
@@ -14,10 +15,12 @@ function LoadingProviderInner({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const timeoutRef = useRef(null);
   const progressRef = useRef(null);
+  const previousPathnameRef = useRef(pathname);
 
   // Get route information for better UX
   const getRouteInfo = (path) => {
@@ -40,33 +43,49 @@ function LoadingProviderInner({ children }) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (progressRef.current) clearInterval(progressRef.current);
     
-    // Start loading immediately
+    // On first mount, just set up the route info without loading
+    if (!hasInitialized) {
+      setHasInitialized(true);
+      setRouteInfo(getRouteInfo(pathname));
+      previousPathnameRef.current = pathname;
+      return;
+    }
+    
+    // Only show loading if the pathname actually changed (route navigation)
+    if (previousPathnameRef.current === pathname) {
+      return;
+    }
+    
+    // Update previous pathname reference
+    previousPathnameRef.current = pathname;
+    
+    // Show loading for actual route changes
     setIsLoading(true);
     setLoadingProgress(0);
     setRouteInfo(getRouteInfo(pathname));
     
-    // Simulate loading progress
+    // Simulate loading progress with more consistent timing
     let progress = 0;
     progressRef.current = setInterval(() => {
-      progress += Math.random() * 30;
+      progress += Math.random() * 20 + 10; // More consistent progress
       if (progress > 90) progress = 90;
       setLoadingProgress(progress);
-    }, 100);
+    }, 80);
     
-    // Stop loading after component has had time to mount
+    // Stop loading after a fixed time to prevent indefinite loading
     timeoutRef.current = setTimeout(() => {
       setLoadingProgress(100);
       setTimeout(() => {
         setIsLoading(false);
         setLoadingProgress(0);
-      }, 200);
-    }, Math.random() * 300 + 400); // Random between 400-700ms for natural feel
+      }, 150);
+    }, 400); // Fixed 400ms duration
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (progressRef.current) clearInterval(progressRef.current);
     };
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, hasInitialized]);
 
   return (
     <LoadingContext.Provider value={{ 

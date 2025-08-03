@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
+import { waitForDatabase } from "@/lib/database-health";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -43,6 +44,12 @@ export async function saveResume(content) {
 export async function getResume() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  // Check database health and wait if needed
+  const dbHealth = await waitForDatabase();
+  if (!dbHealth.success) {
+    throw new Error("Database is currently unavailable. Please try again in a moment.");
+  }
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },

@@ -2,20 +2,22 @@
 
 import { useLoading } from "./loading-provider";
 import { motion, AnimatePresence } from "framer-motion";
+import { ClientOnly } from "./client-only";
 
 export function LoadingTopBar() {
   const { isLoading, loadingProgress } = useLoading();
 
   return (
-    <AnimatePresence>
-      {isLoading && (
-        <motion.div
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          exit={{ scaleX: 0, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed top-0 left-0 right-0 z-50 origin-left"
-        >
+    <ClientOnly fallback={null}>
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            exit={{ scaleX: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-0 left-0 right-0 z-50 origin-left"
+          >
           {/* Main progress bar */}
           <div className="h-1 bg-primary shadow-sm shadow-primary/20">
             <motion.div
@@ -42,5 +44,6 @@ export function LoadingTopBar() {
         </motion.div>
       )}
     </AnimatePresence>
+    </ClientOnly>
   );
 }
