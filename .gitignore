@@ -42,3 +42,18 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Personal files and documents (PRIVACY)
+*.pdf
+*.doc
+*.docx
+*resume*
+*cv*
+*Resume*
+*CV*
+*personal*
+*Personal*
+
+# IDE history and cache
+.history/
+.vscode/settings.json
