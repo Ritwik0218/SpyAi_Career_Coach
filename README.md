@@ -13,7 +13,7 @@
 [![Clerk](https://img.shields.io/badge/Clerk-Authentication-6C47FF)](https://clerk.com/)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000)](https://vercel.com/)
 
-[🌐 Live Demo](https://spy-ai-career-coach.vercel.app) | [📚 Documentation](#features) | [🚀 Quick Start](#quick-start)
+[🌐 Live Demo](https://spy-ai-alpha.vercel.app) | [📚 Documentation](#features) | [🚀 Quick Start](#quick-start)
 
 </div>
 

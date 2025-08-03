@@ -281,6 +281,9 @@ export default function LandingPage() {
                           src={testimonial.image}
                           alt={testimonial.author}
                           className="rounded-full object-cover border-2 border-primary/20"
+                          onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.author)}&background=3b82f6&color=fff&size=40`;
+                          }}
                         />
                       </div>
                       <div>

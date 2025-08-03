@@ -71,22 +71,22 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mt-4 px-4 sm:px-0"
+          className="flex justify-center items-center gap-1 sm:gap-3 mt-4 px-2 sm:px-0"
         >
           <Link href="/resume">
-            <Button size="sm" variant="ghost" className="px-3 sm:px-4 text-xs sm:text-sm">
+            <Button size="sm" variant="ghost" className="px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap">
               Build Resume
             </Button>
           </Link>
           <span className="text-muted-foreground text-xs sm:text-sm">•</span>
           <Link href="/resume/ats-analysis">
-            <Button size="sm" variant="ghost" className="px-3 sm:px-4 text-xs sm:text-sm">
+            <Button size="sm" variant="ghost" className="px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap">
               ATS Analyzer
             </Button>
           </Link>
           <span className="text-muted-foreground text-xs sm:text-sm">•</span>
           <Link href="/ai-cover-letter">
-            <Button size="sm" variant="ghost" className="px-3 sm:px-4 text-xs sm:text-sm">
+            <Button size="sm" variant="ghost" className="px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap">
               Cover Letter
             </Button>
           </Link>
