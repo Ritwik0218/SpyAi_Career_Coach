@@ -27,35 +27,60 @@ export const contactSchema = z.object({
   twitter: z.string().optional(),
 });
 
+// Base entry schema with common fields
+const baseEntrySchema = z.object({
+  description: z.string().optional(),
+  duration: z.string().optional(),
+});
+
+// Experience-specific schema
+export const experienceSchema = baseEntrySchema.extend({
+  company: z.string().min(1, "Company is required"),
+  position: z.string().min(1, "Position is required"),
+  location: z.string().optional(),
+});
+
+// Education-specific schema  
+export const educationSchema = baseEntrySchema.extend({
+  institution: z.string().min(1, "Institution is required"),
+  degree: z.string().min(1, "Degree is required"),
+  field: z.string().optional(),
+});
+
+// Project-specific schema
+export const projectSchema = baseEntrySchema.extend({
+  title: z.string().min(1, "Title is required"),
+  technologies: z.string().optional(),
+  link: z.string().optional(),
+});
+
+// Legacy entry schema for backward compatibility
 export const entrySchema = z
   .object({
-    title: z.string().min(1, "Title is required"),
-    organization: z.string().min(1, "Organization is required"),
-    startDate: z.string().min(1, "Start date is required"),
+    title: z.string().optional(),
+    organization: z.string().optional(),
+    company: z.string().optional(),
+    institution: z.string().optional(),
+    position: z.string().optional(),
+    degree: z.string().optional(),
+    field: z.string().optional(),
+    location: z.string().optional(),
+    technologies: z.string().optional(),
+    link: z.string().optional(),
+    startDate: z.string().optional(),
     endDate: z.string().optional(),
-    description: z.string().min(1, "Description is required"),
+    duration: z.string().optional(),
+    description: z.string().optional(),
     current: z.boolean().default(false),
-  })
-  .refine(
-    (data) => {
-      if (!data.current && !data.endDate) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "End date is required unless this is your current position",
-      path: ["endDate"],
-    }
-  );
+  });
 
 export const resumeSchema = z.object({
   contactInfo: contactSchema,
-  summary: z.string().min(1, "Professional summary is required"),
-  skills: z.string().min(1, "Skills are required"),
-  experience: z.array(entrySchema),
-  education: z.array(entrySchema),
-  projects: z.array(entrySchema),
+  summary: z.string().optional(),
+  skills: z.string().optional(),
+  experience: z.array(experienceSchema).optional(),
+  education: z.array(educationSchema).optional(),
+  projects: z.array(projectSchema).optional(),
 });
 
 export const coverLetterSchema = z.object({

@@ -67,13 +67,13 @@ export async function generateCoverLetter(data) {
 
 export async function getCoverLetters() {
   const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  if (!userId) return []; // Return empty array instead of throwing error
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) return []; // Return empty array instead of throwing error
 
   return await db.coverLetter.findMany({
     where: {

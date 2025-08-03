@@ -15,8 +15,27 @@ const useFetch = (cb) => {
       setData(response);
       setError(null);
     } catch (error) {
-      setError(error);
-      toast.error(error.message);
+      console.error("useFetch error:", error);
+      
+      let errorMessage = "An unexpected error occurred";
+      
+      // Handle different types of errors
+      if (error.message) {
+        if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          errorMessage = "Network connection error. Please check your internet connection and try again.";
+        } else if (error.message.includes("Unauthorized")) {
+          errorMessage = "Please sign in to continue.";
+        } else if (error.message.includes("timeout") || error.message.includes("abort")) {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (error.message.includes("server")) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError({ ...error, displayMessage: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

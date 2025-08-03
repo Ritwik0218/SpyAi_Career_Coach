@@ -7,8 +7,8 @@ export default function Page() {
         baseTheme: "dark"
       }}
       afterSignInUrl="/onboarding"
+      afterSignUpUrl="/onboarding"
       redirectUrl="/onboarding"
-      forceRedirectUrl="/onboarding"
     />
   );
 }

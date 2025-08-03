@@ -6,9 +6,9 @@ export default function Page() {
       appearance={{
         baseTheme: "dark"
       }}
+      afterSignInUrl="/onboarding"
       afterSignUpUrl="/onboarding"
       redirectUrl="/onboarding"
-      forceRedirectUrl="/onboarding"
     />
   );
 }

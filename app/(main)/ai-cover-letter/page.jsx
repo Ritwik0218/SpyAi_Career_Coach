@@ -3,9 +3,25 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CoverLetterList from "./_components/cover-letter-list";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function CoverLetterPage() {
-  const coverLetters = await getCoverLetters();
+  // Check authentication first
+  const { userId } = await auth();
+  
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  let coverLetters = [];
+  
+  try {
+    coverLetters = await getCoverLetters();
+  } catch (error) {
+    console.error("Failed to fetch cover letters:", error);
+    // Continue with empty array for build-time
+  }
 
   return (
     <div>
