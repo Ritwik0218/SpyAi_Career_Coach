@@ -9,13 +9,13 @@ export function LoadingTopBar() {
 
   return (
     <ClientOnly fallback={null}>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div
             initial={{ scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
             exit={{ scaleX: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             className="fixed top-0 left-0 right-0 z-50 origin-left"
           >
           {/* Main progress bar */}
@@ -23,7 +23,7 @@ export function LoadingTopBar() {
             <motion.div
               initial={{ width: "0%" }}
               animate={{ width: `${loadingProgress}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="h-full bg-primary-foreground/30"
             />
           </div>

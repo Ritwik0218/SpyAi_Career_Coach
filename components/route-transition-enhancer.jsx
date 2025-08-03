@@ -12,7 +12,7 @@ export function RouteTransitionEnhancer({ children }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{
-        duration: 0.2,
+        duration: 0.15,
         ease: "easeOut"
       }}
       className="w-full"

@@ -9,6 +9,9 @@ import { PageLoader } from "@/components/page-loader";
 import { LoadingTopBar } from "@/components/loading-top-bar";
 import { RouteTransitionEnhancer } from "@/components/route-transition-enhancer";
 import { dark } from "@clerk/themes";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
+import { LoadingDebugger } from "@/components/loading-debugger";
 
 const inter = Inter({ 
   subsets: ["latin"], 
@@ -47,6 +50,11 @@ export default function RootLayout({ children }) {
       appearance={{
         baseTheme: dark,
       }}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignInUrl="/onboarding"
+      afterSignUpUrl="/onboarding"
+      afterSignOutUrl="/"
     >
       <html lang="en" suppressHydrationWarning>
         <head>
@@ -67,6 +75,9 @@ export default function RootLayout({ children }) {
                 <main className="min-h-screen">{children}</main>
               </RouteTransitionEnhancer>
               <Toaster richColors />
+              <SpeedInsights />
+              <Analytics />
+              <LoadingDebugger />
 
               <footer className="bg-muted/50 py-12">
                 <div className="container mx-auto px-4 text-center text-gray-200">

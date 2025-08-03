@@ -10,20 +10,28 @@ export function PageLoader() {
 
   return (
     <ClientOnly fallback={null}>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ 
+              duration: 0.15,
+              ease: "easeOut"
+            }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md"
           >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: -20 }}
-            transition={{ duration: 0.25, type: "spring", stiffness: 300 }}
+            transition={{ 
+              duration: 0.2, 
+              type: "spring", 
+              stiffness: 400,
+              damping: 25
+            }}
             className="flex flex-col items-center space-y-6 p-8 rounded-2xl bg-card/80 border shadow-2xl backdrop-blur-sm"
           >
             {/* Animated Logo/Icon */}

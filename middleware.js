@@ -9,15 +9,32 @@ const isProtectedRoute = createRouteMatcher([
   "/onboarding(.*)",
 ]);
 
+const isAuthRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  try {
+    const { userId } = await auth();
 
-  if (!userId && isProtectedRoute(req)) {
-    const { redirectToSignIn } = await auth();
-    return redirectToSignIn();
+    // If user is authenticated and trying to access auth pages, redirect to dashboard
+    if (userId && isAuthRoute(req)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // If user is not authenticated and trying to access protected routes, redirect to sign-in
+    if (!userId && isProtectedRoute(req)) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("redirect_url", req.url);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
+    return NextResponse.next();
   }
-
-  return NextResponse.next();
 });
 
 export const config = {

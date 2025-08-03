@@ -1,5 +1,14 @@
 import { SignIn } from "@clerk/nextjs";
 
 export default function Page() {
-  return <SignIn />;
+  return (
+    <SignIn 
+      appearance={{
+        baseTheme: "dark"
+      }}
+      afterSignInUrl="/onboarding"
+      redirectUrl="/onboarding"
+      forceRedirectUrl="/onboarding"
+    />
+  );
 }

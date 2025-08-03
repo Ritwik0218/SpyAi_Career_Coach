@@ -21,6 +21,7 @@ function LoadingProviderInner({ children }) {
   const timeoutRef = useRef(null);
   const progressRef = useRef(null);
   const previousPathnameRef = useRef(pathname);
+  const loadingStartTime = useRef(null);
 
   // Get route information for better UX
   const getRouteInfo = (path) => {
@@ -38,10 +39,18 @@ function LoadingProviderInner({ children }) {
     return routes[path] || { name: 'Loading Page', icon: '⚡' };
   };
 
-  useEffect(() => {
-    // Clear any existing timers
+  // Clear loading function
+  const clearLoading = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (progressRef.current) clearInterval(progressRef.current);
+    setIsLoading(false);
+    setLoadingProgress(0);
+    loadingStartTime.current = null;
+  };
+
+  useEffect(() => {
+    // Clear any existing timers
+    clearLoading();
     
     // On first mount, just set up the route info without loading
     if (!hasInitialized) {
@@ -59,33 +68,62 @@ function LoadingProviderInner({ children }) {
     // Update previous pathname reference
     previousPathnameRef.current = pathname;
     
+    // Record loading start time
+    loadingStartTime.current = Date.now();
+    
     // Show loading for actual route changes
     setIsLoading(true);
     setLoadingProgress(0);
     setRouteInfo(getRouteInfo(pathname));
     
-    // Simulate loading progress with more consistent timing
+    // Faster progress simulation
     let progress = 0;
     progressRef.current = setInterval(() => {
-      progress += Math.random() * 20 + 10; // More consistent progress
-      if (progress > 90) progress = 90;
+      progress += Math.random() * 25 + 15; // Faster progress
+      if (progress > 85) progress = 85; // Cap at 85% until completion
       setLoadingProgress(progress);
-    }, 80);
+    }, 60); // Faster intervals
     
-    // Stop loading after a fixed time to prevent indefinite loading
+    // Complete loading faster and ensure it stops
     timeoutRef.current = setTimeout(() => {
+      if (progressRef.current) clearInterval(progressRef.current);
       setLoadingProgress(100);
+      
+      // Hide loader quickly
       setTimeout(() => {
-        setIsLoading(false);
-        setLoadingProgress(0);
-      }, 150);
-    }, 400); // Fixed 400ms duration
+        clearLoading();
+      }, 100);
+    }, 300); // Much shorter duration - 300ms
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (progressRef.current) clearInterval(progressRef.current);
+      clearLoading();
     };
   }, [pathname, searchParams, hasInitialized]);
+
+  // Additional effect to handle page load completion
+  useEffect(() => {
+    const handleComplete = () => {
+      // If loading has been going on for more than 200ms, complete it
+      if (loadingStartTime.current && Date.now() - loadingStartTime.current > 200) {
+        clearLoading();
+      }
+    };
+
+    // Listen for page load events
+    if (typeof window !== 'undefined') {
+      window.addEventListener('load', handleComplete);
+      document.addEventListener('DOMContentLoaded', handleComplete);
+      
+      // Force clear after 500ms maximum
+      const maxTimeout = setTimeout(clearLoading, 500);
+
+      return () => {
+        window.removeEventListener('load', handleComplete);
+        document.removeEventListener('DOMContentLoaded', handleComplete);
+        clearTimeout(maxTimeout);
+      };
+    }
+  }, [isLoading]);
 
   return (
     <LoadingContext.Provider value={{ 
