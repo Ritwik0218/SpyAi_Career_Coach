@@ -2,10 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+import { getGeminiModel } from "@/lib/gemini";
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -44,6 +41,19 @@ export async function generateQuiz() {
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — return a small static quiz as fallback
+      return [
+        {
+          question: `What is a good practice when preparing for ${user.industry} interviews?`,
+          options: ["Practice problem solving", "Ignore job description", "Arrive unprepared", "Read social media"],
+          correctAnswer: "Practice problem solving",
+          explanation: "Preparing via practice improves familiarity with common questions and problem types."
+        }
+      ];
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
@@ -99,15 +109,19 @@ export async function saveQuizResult(questions, answers, score) {
       Don't explicitly mention the mistakes, instead focus on what to learn/practice.
     `;
 
-    try {
-      const tipResult = await model.generateContent(improvementPrompt);
-
-      improvementTip = tipResult.response.text().trim();
-      console.log(improvementTip);
-    } catch (error) {
-      console.error("Error generating improvement tip:", error);
-      // Continue without improvement tip if generation fails
-    }
+      try {
+        const model = getGeminiModel();
+        if (model) {
+          const tipResult = await model.generateContent(improvementPrompt);
+          improvementTip = tipResult.response.text().trim();
+          console.log(improvementTip);
+        } else {
+          console.info("GEMINI_API_KEY not configured — skipping improvement tip generation");
+        }
+      } catch (error) {
+        console.error("Error generating improvement tip:", error);
+        // Continue without improvement tip if generation fails
+      }
   }
 
   try {

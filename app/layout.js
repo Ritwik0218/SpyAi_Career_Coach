@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import Header from "@/components/header";
+import DevFallbackBanner from "@/components/dev-fallback-banner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LoadingProvider } from "@/components/loading-provider";
 import { PageLoader } from "@/components/page-loader";
@@ -69,6 +70,7 @@ export default function RootLayout({ children }) {
             <LoadingProvider>
               <LoadingTopBar />
               <Header />
+              <DevFallbackBanner />
               <PageLoader />
               <RouteTransitionEnhancer>
                 <main className="min-h-screen">{children}</main>

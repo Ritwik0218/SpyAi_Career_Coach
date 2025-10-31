@@ -2,10 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+import { getGeminiModel } from "@/lib/gemini";
 
 export async function generateCoverLetter(data) {
   const { userId } = await auth();
@@ -44,8 +41,15 @@ export async function generateCoverLetter(data) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const content = result.response.text().trim();
+    const model = getGeminiModel();
+    let content;
+    if (!model) {
+      // AI not configured — create a safe, simple cover letter template
+      content = `Dear Hiring Manager,\n\nI am excited to apply for the ${data.jobTitle} role at ${data.companyName}. With experience in ${user.industry} and skills in ${user.skills?.join(", ") || "relevant areas"}, I believe I can contribute to your team. In my previous roles, I have delivered measurable results by focusing on impact and strong execution. I look forward to the opportunity to discuss how my background aligns with ${data.companyName}'s needs.\n\nSincerely,\n${user.name || "Candidate"}`;
+    } else {
+      const result = await model.generateContent(prompt);
+      content = result.response.text().trim();
+    }
 
     const coverLetter = await db.coverLetter.create({
       data: {

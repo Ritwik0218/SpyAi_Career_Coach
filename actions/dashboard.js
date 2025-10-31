@@ -2,10 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+import { getGeminiModel } from "@/lib/gemini";
 
 export const generateAIInsights = async (industry) => {
   const prompt = `
@@ -27,6 +24,23 @@ export const generateAIInsights = async (industry) => {
           Growth rate should be a percentage.
           Include at least 5 skills and trends.
         `;
+
+  const model = getGeminiModel();
+  if (!model) {
+    // AI not configured — return a conservative fallback
+    return {
+      salaryRanges: [
+        { role: "Senior", min: 60000, max: 120000, median: 90000, location: "Remote" },
+        { role: "Mid", min: 40000, max: 80000, median: 60000, location: "Remote" }
+      ],
+      growthRate: 3,
+      demandLevel: "Medium",
+      topSkills: ["communication", "collaboration", "industry knowledge"],
+      marketOutlook: "Neutral",
+      keyTrends: ["remote work", "automation", "data-driven decisions"],
+      recommendedSkills: ["communication", "technical skills", "productivity tools"]
+    };
+  }
 
   const result = await model.generateContent(prompt);
   const response = result.response;

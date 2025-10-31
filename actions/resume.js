@@ -2,11 +2,8 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+import { getGeminiModel } from "@/lib/gemini";
 
 // Timeout wrapper for AI API calls
 const withTimeout = (promise, timeoutMs = 60000) => {
@@ -129,6 +126,12 @@ export async function improveWithAI({ current, type }) {
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — return the original content as a safe fallback
+      return current;
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const improvedContent = response.text().trim();
@@ -174,6 +177,12 @@ export async function improveEntireResume(resumeContent) {
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — return the original resume as a safe fallback
+      return resumeContent;
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const improvedResume = response.text().trim();
@@ -213,6 +222,42 @@ export async function generateSuggestions({ section, currentContent, count = 5 }
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — provide fallback suggestions
+      const fallbackSuggestions = {
+        summary: [
+          `Tailor your professional summary to highlight ${user.industry || 'relevant'} experience`,
+          "Include 2-3 quantified achievements with specific numbers",
+          "Add industry-specific keywords and technical skills",
+          "Mention years of experience and key expertise areas",
+          "Conclude with your career objective or value proposition"
+        ],
+        skills: [
+          "Organize skills by relevance to target role",
+          "Include both technical and soft skills",
+          "Add proficiency levels where appropriate",
+          "Include trending industry skills and certifications",
+          "Remove outdated or irrelevant skills"
+        ],
+        experience: [
+          "Use strong action verbs to start each bullet point",
+          "Quantify achievements with numbers, percentages, or dollar amounts",
+          "Focus on results and impact rather than just responsibilities",
+          "Include relevant keywords from job descriptions",
+          "Show career progression and increasing responsibilities"
+        ],
+        education: [
+          "List most recent and relevant education first",
+          "Include relevant coursework for entry-level positions",
+          "Add GPA if 3.5 or higher and recent graduate",
+          "Include academic honors, awards, or relevant projects",
+          "Consider adding relevant certifications or training"
+        ]
+      };
+      return fallbackSuggestions[section] || fallbackSuggestions.summary;
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const responseText = response.text().trim();
@@ -320,6 +365,19 @@ export async function generateResumeSection(section, userInfo) {
   }
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — produce simple local generation
+      if (section === 'summary') {
+        const summary = `${user.name || 'Candidate'} is a ${user.industry || 'professional'} with ${user.experience || 'relevant'} experience. ${user.bio || ''}`;
+        return summary;
+      }
+      if (section === 'skills') {
+        return (user.skills && user.skills.length) ? user.skills.join(', ') : (user.industryInsight?.topSkills || []).slice(0,10).join(', ');
+      }
+      return '';
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const generatedContent = response.text().trim();
@@ -355,6 +413,12 @@ export async function generateContent(section, userData) {
   const prompt = prompts[section] || prompts.summary;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not available — return a simple fallback
+      return userData.example || "";
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const generatedContent = response.text().trim();
@@ -450,6 +514,47 @@ export async function analyzeResumeATS(resumeContent, jobDescription, targetRole
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      // AI not configured — produce an intelligent local fallback (reuse later catch fallback)
+      // Use the same fallback logic as the catch block to compute a result without AI
+      const wordCount = resumeContent.split(' ').length;
+      const hasNumbers = /\d/.test(resumeContent);
+      const hasCommonSkills = /javascript|python|marketing|sales|management|analysis|communication/i.test(resumeContent);
+      let fallbackScore = 65;
+      if (wordCount > 200) fallbackScore += 5;
+      if (hasNumbers) fallbackScore += 8;
+      if (hasCommonSkills) fallbackScore += 7;
+      if (resumeContent.length > 1000) fallbackScore += 5;
+      const jobWords = jobDescription.toLowerCase().split(/\W+/).filter(word => word.length > 3);
+      const resumeWords = resumeContent.toLowerCase().split(/\W+/).filter(word => word.length > 3);
+      const commonWords = jobWords.filter(word => resumeWords.includes(word)).slice(0, 5);
+      const missingWords = jobWords.filter(word => !resumeWords.includes(word)).slice(0, 5);
+
+      return {
+        atsScore: Math.min(fallbackScore, 85),
+        overallAssessment: `Basic analysis completed for ${targetRole} at ${companyName}.`,
+        keywordAnalysis: {
+          matchedKeywords: commonWords.length > 0 ? commonWords : ["experience", "skills", "professional"],
+          missingKeywords: missingWords.length > 0 ? missingWords : ["leadership", "collaboration", "innovation"],
+          keywordDensity: Math.round((commonWords.length / (resumeWords.length || 1)) * 100) || 5
+        },
+        sectionAnalysis: {
+          professionalSummary: { score: fallbackScore - 5, issues: ["Could be more tailored to the specific role", "Missing key industry keywords"], suggestions: [`Add "${targetRole}" specific terminology`, "Include 2-3 quantified achievements", "Mention relevant industry experience"] },
+          skills: { score: fallbackScore + 5, issues: hasCommonSkills ? ["Skills section shows good coverage"] : ["Missing key technical skills from job description"], suggestions: ["Add skills mentioned in job description", "Include proficiency levels", "Organize by relevance to role"] },
+          experience: { score: hasNumbers ? fallbackScore + 10 : fallbackScore - 10, issues: hasNumbers ? ["Good quantification present"] : ["Lacks quantified achievements", "Missing impact metrics"], suggestions: hasNumbers ? ["Maintain strong quantification approach"] : ["Add specific numbers and percentages", "Include project outcomes", "Mention team sizes and budgets"] },
+          education: { score: fallbackScore, issues: ["Standard presentation"], suggestions: ["Include relevant coursework if applicable", "Add certifications", "Mention academic achievements"] },
+          formatting: { score: fallbackScore + 15, issues: ["Generally ATS-friendly structure"], suggestions: ["Use standard section headers", "Maintain consistent formatting", "Avoid graphics and tables"] }
+        },
+        recommendations: {
+          immediate: [`Research and add 5-7 keywords from the ${targetRole} job description`, "Quantify at least 3 achievements with specific numbers or percentages", `Tailor professional summary to mention ${companyName} and the specific role`],
+          shortTerm: ["Update skills section to match job requirements priority", `Add relevant projects or certifications for ${user.industry || 'your'} industry`, "Optimize work experience descriptions for ATS scanning"],
+          longTerm: [`Build expertise in trending ${user.industry || 'industry'} skills`, "Develop measurable achievements in current role", "Consider additional certifications relevant to career goals"]
+        },
+        industryBenchmark: { averageScore: 72, topPerformerScore: 88, yourRanking: fallbackScore > 70 ? "65th percentile" : "45th percentile" }
+      };
+    }
+
     const result = await withTimeout(model.generateContent(prompt), 45000); // 45 second timeout
     const response = result.response;
     const responseText = response.text().trim();
