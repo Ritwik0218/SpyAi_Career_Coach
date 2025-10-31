@@ -50,7 +50,25 @@ export async function generateCoverLetter(data) {
       content = `Dear Hiring Manager,\n\nI am excited to apply for the ${data.jobTitle} role at ${data.companyName}. With experience in ${user.industry} and skills in ${user.skills?.join(", ") || "relevant areas"}, I believe I can contribute to your team. In my previous roles, I have delivered measurable results by focusing on impact and strong execution. I look forward to the opportunity to discuss how my background aligns with ${data.companyName}'s needs.\n\nSincerely,\n${user.name || "Candidate"}`;
     } else {
       const result = await model.generateContent(prompt);
-      content = result.response.text().trim();
+      // The API may return a response object where text() is async — await it and
+      // handle multiple possible shapes defensively to avoid runtime errors
+      try {
+        if (result?.response && typeof result.response.text === "function") {
+          content = (await result.response.text()).trim();
+        } else if (result?.output && Array.isArray(result.output) && result.output[0]?.content?.text) {
+          content = String(result.output[0].content.text).trim();
+        } else if (typeof result === "string") {
+          content = result.trim();
+        } else {
+          // Fallback: stringify whatever we have
+          content = String(result).slice(0, 2000).trim();
+        }
+      } catch (parseErr) {
+        // Log parse error and fall back to a safe template
+        console.error("Error parsing Gemini response:", parseErr, result);
+        logFallback('cover_letter_parse_failed', { userId: user.id, err: String(parseErr) });
+        content = `Dear Hiring Manager,\n\nI am excited to apply for the ${data.jobTitle} role at ${data.companyName}. With experience in ${user.industry} and skills in ${user.skills?.join(", ") || "relevant areas"}, I believe I can contribute to your team. In my previous roles, I have delivered measurable results by focusing on impact and strong execution. I look forward to the opportunity to discuss how my background aligns with ${data.companyName}'s needs.\n\nSincerely,\n${user.name || "Candidate"}`;
+      }
     }
 
     const coverLetter = await db.coverLetter.create({
@@ -66,7 +84,9 @@ export async function generateCoverLetter(data) {
 
     return coverLetter;
   } catch (error) {
-    console.error("Error generating cover letter:", error.message);
+    // Log full error (stack) so server logs contain actionable details in CI/Vercel
+    console.error("Error generating cover letter:", error);
+    // Surface a generic error upward to avoid leaking sensitive info to clients
     throw new Error("Failed to generate cover letter");
   }
 }
