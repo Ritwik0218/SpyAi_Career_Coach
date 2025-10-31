@@ -1,11 +1,13 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
+  "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/api/inngest", "dest": "/api/inngest" }
+  ],
   "env": {
-    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+    "NODE_ENV": "production"
   },
   "functions": {
     "app/api/**/*.js": {
@@ -16,25 +18,13 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
     }
   ],
   "rewrites": [
-    {
-      "source": "/api/inngest",
-      "destination": "/api/inngest"
-    }
+    { "source": "/api/inngest", "destination": "/api/inngest" }
   ]
 }
