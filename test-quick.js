@@ -15,10 +15,15 @@ console.log('- INNGEST_SIGNING_KEY:', process.env.INNGEST_SIGNING_KEY ? 'Set' : 
 // Test Gemini API
 async function testGemini() {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      console.log('\n⚠️ GEMINI_API_KEY not set — skipping Gemini connectivity test (fallbacks active)');
+      return;
+    }
+
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     const result = await model.generateContent('Test API connection');
     console.log('\n✅ Gemini API connection successful');
   } catch (error) {
