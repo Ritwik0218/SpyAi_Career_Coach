@@ -1,5 +1,11 @@
 "use client";
 
+// This route relies on authenticated server actions (Clerk's auth) and
+// dynamic data (DB). Force dynamic rendering so Next doesn't attempt to
+// pre-render this route statically during the build, which causes
+// `headers()` / `auth()` related errors.
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
