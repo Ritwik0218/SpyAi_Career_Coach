@@ -25,3 +25,30 @@ jobs:
         run: |
           npm run smoke || true
         # Don't fail the whole CI on smoke test absence of local dev server; keep it informative
+
+  e2e:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Start server
+        run: |
+          PORT=3005 npm run start &
+          for i in {1..30}; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3005/ || echo "000");
+            if [ "$status" -eq 200 ]; then echo "server ready"; break; fi;
+            echo "waiting for server ($i) status=$status"; sleep 1;
+          done
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=github || true
+        # Keep tests non-blocking for now; fail-fast can be enabled later
