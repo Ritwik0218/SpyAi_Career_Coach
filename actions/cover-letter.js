@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
+import { logFallback } from "@/lib/fallback-logger";
 
 export async function generateCoverLetter(data) {
   const { userId } = await auth();
@@ -45,6 +46,7 @@ export async function generateCoverLetter(data) {
     let content;
     if (!model) {
       // AI not configured — create a safe, simple cover letter template
+      logFallback('cover_letter_fallback', { userId: user.id, jobTitle: data.jobTitle, company: data.companyName });
       content = `Dear Hiring Manager,\n\nI am excited to apply for the ${data.jobTitle} role at ${data.companyName}. With experience in ${user.industry} and skills in ${user.skills?.join(", ") || "relevant areas"}, I believe I can contribute to your team. In my previous roles, I have delivered measurable results by focusing on impact and strong execution. I look forward to the opportunity to discuss how my background aligns with ${data.companyName}'s needs.\n\nSincerely,\n${user.name || "Candidate"}`;
     } else {
       const result = await model.generateContent(prompt);

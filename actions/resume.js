@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getGeminiModel } from "@/lib/gemini";
+import { logFallback } from "@/lib/fallback-logger";
 
 // Timeout wrapper for AI API calls
 const withTimeout = (promise, timeoutMs = 60000) => {
@@ -128,6 +129,7 @@ export async function improveWithAI({ current, type }) {
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_improve_fallback', { userId: user?.id, type });
       // AI not configured — return the original content as a safe fallback
       return current;
     }
@@ -179,6 +181,7 @@ export async function improveEntireResume(resumeContent) {
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_improve_entire_fallback', { userId: user?.id });
       // AI not configured — return the original resume as a safe fallback
       return resumeContent;
     }
@@ -224,6 +227,7 @@ export async function generateSuggestions({ section, currentContent, count = 5 }
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_generate_suggestions_fallback', { userId: user?.id, section });
       // AI not configured — provide fallback suggestions
       const fallbackSuggestions = {
         summary: [
@@ -367,6 +371,7 @@ export async function generateResumeSection(section, userInfo) {
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_generate_section_fallback', { userId: user?.id, section });
       // AI not configured — produce simple local generation
       if (section === 'summary') {
         const summary = `${user.name || 'Candidate'} is a ${user.industry || 'professional'} with ${user.experience || 'relevant'} experience. ${user.bio || ''}`;
@@ -415,6 +420,7 @@ export async function generateContent(section, userData) {
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_generate_content_fallback', { userId: user?.id, section });
       // AI not available — return a simple fallback
       return userData.example || "";
     }
@@ -516,6 +522,7 @@ export async function analyzeResumeATS(resumeContent, jobDescription, targetRole
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_analyze_fallback', { userId: user?.id, targetRole, companyName });
       // AI not configured — produce an intelligent local fallback (reuse later catch fallback)
       // Use the same fallback logic as the catch block to compute a result without AI
       const wordCount = resumeContent.split(' ').length;
@@ -820,13 +827,28 @@ export async function optimizeResumeSection({ sectionType, currentContent, jobDe
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      logFallback('resume_optimize_section_fallback', { userId: user?.id, sectionType });
+      // AI not configured — return a conservative fallback
+      return {
+        optimizedContent: currentContent,
+        score: 70,
+        recommendations: [
+          "Add relevant keywords from job description",
+          "Enhance action verbs and impact statements",
+          "Improve ATS readability and structure",
+        ],
+      };
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const optimizedContent = response.text().trim();
-    
+
     // Calculate improvement score
     const improvementScore = Math.min(Math.max(15, Math.floor(Math.random() * 30) + 15), 35);
-    
+
     return {
       optimizedContent,
       score: 75 + improvementScore,
@@ -893,6 +915,22 @@ export async function generateATSKeywords({ jobDescription, targetRole, resumeCo
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      logFallback('resume_generate_keywords_fallback', { userId: user?.id, targetRole, companyName });
+      // AI not configured — return fallback keywords
+      return {
+        primaryKeywords: ["leadership", "communication", "project management"],
+        secondaryKeywords: ["teamwork", "problem solving", "analytical skills"],
+        technicalSkills: ["software", "technology", "data analysis"],
+        softSkills: ["collaboration", "time management", "adaptability"],
+        industryTerms: [user.industry || "professional", "experience", "expertise"],
+        certifications: ["relevant certifications", "professional development"],
+        tools: ["industry tools", "software platforms"],
+        missingFromResume: ["keywords to add", "skills to highlight"]
+      };
+    }
+
     const result = await model.generateContent(prompt);
     const response = result.response;
     const responseText = response.text().trim();
@@ -978,15 +1016,32 @@ export async function generateOptimizedResume({ resumeContent, jobDescription, t
   `;
 
   try {
+    const model = getGeminiModel();
+    if (!model) {
+      logFallback('resume_generate_optimized_fallback', { userId: user?.id, targetRole, companyName });
+      return {
+        optimizedContent: resumeContent,
+        originalLength: resumeContent.length,
+        optimizedLength: resumeContent.length,
+        improvementScore: 70,
+        improvements: [
+          "Suggest adding relevant keywords from job description",
+          "Improve action verbs and quantify achievements",
+          "Align experience with job requirements",
+          "Simplify formatting for ATS scanning"
+        ]
+      };
+    }
+
     const result = await withTimeout(model.generateContent(prompt), 45000);
     const response = result.response;
     const optimizedResume = response.text().trim();
-    
+
     // Calculate an estimated improvement score
     const originalLength = resumeContent.length;
     const optimizedLength = optimizedResume.length;
     const improvementScore = Math.min(85 + Math.floor(Math.random() * 10), 95);
-    
+
     return {
       optimizedContent: optimizedResume,
       originalLength,

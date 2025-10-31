@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate"
+  "dev": "next dev --turbopack",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "smoke": "node ./scripts/smoke-test.js",
+  "postinstall": "prisma generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
@@ -60,6 +61,8 @@
     "eslint-config-next": "^15.4.5",
     "postcss": "^8",
     "prisma": "^6.2.1",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "playwright": "^1.35.0",
+    "@playwright/test": "^1.35.0"
   }
 }

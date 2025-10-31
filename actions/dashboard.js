@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
+import { logFallback } from "@/lib/fallback-logger";
 
 export const generateAIInsights = async (industry) => {
   const prompt = `
@@ -27,6 +28,7 @@ export const generateAIInsights = async (industry) => {
 
   const model = getGeminiModel();
   if (!model) {
+    logFallback('dashboard_insights_fallback', { industry });
     // AI not configured — return a conservative fallback
     return {
       salaryRanges: [

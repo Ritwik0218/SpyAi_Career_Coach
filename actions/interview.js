@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
+import { logFallback } from "@/lib/fallback-logger";
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -43,6 +44,7 @@ export async function generateQuiz() {
   try {
     const model = getGeminiModel();
     if (!model) {
+      logFallback('interview_quiz_fallback', { userId: userId, industry: user.industry });
       // AI not configured — return a small static quiz as fallback
       return [
         {
@@ -116,6 +118,7 @@ export async function saveQuizResult(questions, answers, score) {
           improvementTip = tipResult.response.text().trim();
           console.log(improvementTip);
         } else {
+          logFallback('interview_tip_skipped', { userId: userId });
           console.info("GEMINI_API_KEY not configured — skipping improvement tip generation");
         }
       } catch (error) {

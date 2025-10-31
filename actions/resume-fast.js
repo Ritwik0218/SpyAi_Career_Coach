@@ -3,20 +3,24 @@
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { revalidatePath } from "next/cache";
+import { logFallback } from "@/lib/fallback-logger";
 
 // Lazily initialize Gemini model to avoid throwing / calling external APIs in dev
 let _model = null;
 function getGeminiModel() {
   if (_model) return _model;
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return null; // no key configured — caller should fallback
+  if (!key) {
+    logFallback('resume_fast_gemini_skipped', { reason: 'GEMINI_API_KEY not set' });
+    return null; // no key configured — caller should fallback
+  }
 
   try {
     const genAI = new GoogleGenerativeAI(key);
     _model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     return _model;
   } catch (err) {
-    console.warn("Failed to initialize Gemini model:", err?.message || err);
+    logFallback('resume_fast_gemini_init_failed', { message: err?.message || String(err) });
     return null;
   }
 }
@@ -134,6 +138,7 @@ Return only the improved text, no explanations.`;
 
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_fast_improve_fallback', { type, userId });
       console.info("GEMINI_API_KEY not configured — returning original text for improveWithAI");
       return { improved: current };
     }
@@ -170,6 +175,7 @@ Provide analysis in this JSON format:
 
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_fast_analyze_fallback', { userId });
       console.info("GEMINI_API_KEY not configured — returning fallback analysis for analyzeWithAI");
       return {
         score: 75,
@@ -220,6 +226,7 @@ Return only the optimized resume content, no explanations.`;
 
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_fast_optimized_resume_fallback', { userId });
       console.info("GEMINI_API_KEY not configured — returning original resume content for generateOptimizedResume");
       return { optimizedContent: resumeContent };
     }
@@ -254,6 +261,7 @@ Provide a JSON response with:
 
     const model = getGeminiModel();
     if (!model) {
+      logFallback('resume_fast_keywords_fallback', { userId });
       console.info("GEMINI_API_KEY not configured — returning fallback keywords for generateATSKeywords");
       return {
         missing_keywords: ["leadership", "collaboration", "problem-solving"],

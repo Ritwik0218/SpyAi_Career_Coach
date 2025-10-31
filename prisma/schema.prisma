@@ -81,3 +81,13 @@ model IndustryInsight {
 
   @@index([industry])
 }
+
+model FallbackEvent {
+  id        String   @id @default(cuid())
+  event     String
+  details   Json
+  createdAt DateTime @default(now())
+  processed Boolean  @default(false)
+
+  @@index([event, processed])
+}
