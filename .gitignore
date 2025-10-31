@@ -44,15 +44,13 @@ next-env.d.ts
 /.clerk/
 
 # Personal files and documents (PRIVACY)
+# NOTE: removed broad patterns that unintentionally matched project source files
+# (for example files under app/(main)/resume/_components). Keep only common
+# exported/personal artefacts here if you actually want them ignored.
 *.pdf
 *.doc
 *.docx
-*resume*
-*cv*
-*Resume*
-*CV*
-*personal*
-*Personal*
+# avoid ignoring project source by accident: remove broad resume/cv patterns
 
 # IDE history and cache
 .history/
