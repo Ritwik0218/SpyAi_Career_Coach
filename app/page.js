@@ -163,7 +163,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            SPY AI is the all-in-one career acceleration platform — resume builder, interview coach, portfolio generator, salary negotiator, and more. Built for India's top talent.
+            SPY AI is the all-in-one career acceleration platform — resume builder, interview coach, portfolio generator, salary negotiator, and more. Built for India&apos;s top talent.
           </p>
 
           {/* CTAs */}
@@ -263,7 +263,7 @@ export default function LandingPage() {
               <Star className="h-3.5 w-3.5 fill-current" />
               Real Results, Real People
             </div>
-            <h2 className="text-4xl md:text-5xl font-black">They Got Hired. Now It's Your Turn.</h2>
+            <h2 className="text-4xl md:text-5xl font-black">They Got Hired. Now It&apos;s Your Turn.</h2>
           </div>
 
           {/* Featured Testimonial */}
@@ -274,7 +274,7 @@ export default function LandingPage() {
                 {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}
               </div>
               <p className="text-2xl md:text-3xl font-semibold text-white leading-relaxed mb-8">
-                "{TESTIMONIALS[activeTestimonial].quote}"
+                &quot;{TESTIMONIALS[activeTestimonial].quote}&quot;
               </p>
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${TESTIMONIALS[activeTestimonial].color} flex items-center justify-center font-black text-lg`}>
@@ -401,7 +401,7 @@ export default function LandingPage() {
           <Link href="/dashboard" className="hover:text-gray-400 transition-colors">Dashboard</Link>
           <Link href="/sign-in" className="hover:text-gray-400 transition-colors">Sign In</Link>
         </div>
-        <p>© 2025 SPY AI Career Coach · Built for India's Top Talent</p>
+        <p>© 2025 SPY AI Career Coach · Built for India&apos;s Top Talent</p>
       </footer>
 
       {/* ── Marquee CSS ── */}

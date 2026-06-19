@@ -62,3 +62,54 @@ export async function getAdminAnalytics() {
     throw new Error(error.message);
   }
 }
+
+export async function getStatusMetrics() {
+  try {
+    const user = await currentUser();
+    if (!user || user.primaryEmailAddress?.emailAddress !== ADMIN_EMAIL) {
+      throw new Error("Unauthorized Access.");
+    }
+
+    // 1. Check DB Latency
+    const dbStart = Date.now();
+    let dbStatus = "healthy";
+    let dbError = null;
+    try {
+      await db.$queryRaw`SELECT 1`;
+    } catch (e) {
+      dbStatus = "error";
+      dbError = e.message;
+    }
+    const dbLatency = Date.now() - dbStart;
+
+    // 2. Check Gemini Latency
+    const geminiStart = Date.now();
+    let geminiStatus = "healthy";
+    let geminiError = null;
+    
+    if (!process.env.GEMINI_API_KEY) {
+      geminiStatus = "inactive";
+      geminiError = "GEMINI_API_KEY not set";
+    } else {
+      try {
+        const { getGeminiModel } = await import("@/lib/gemini");
+        const model = getGeminiModel();
+        if (!model) throw new Error("Failed to initialize model");
+        // Super short prompt for ping
+        await model.generateContent("Ping. Reply with exactly 'Pong'.");
+      } catch (e) {
+        geminiStatus = "error";
+        geminiError = e.message;
+      }
+    }
+    const geminiLatency = Date.now() - geminiStart;
+
+    return {
+      db: { latency: dbLatency, status: dbStatus, error: dbError },
+      gemini: { latency: geminiLatency, status: geminiStatus, error: geminiError }
+    };
+  } catch (error) {
+    console.error("Status Metrics Error:", error);
+    throw new Error(error.message);
+  }
+}
