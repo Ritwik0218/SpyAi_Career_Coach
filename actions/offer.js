@@ -3,9 +3,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { db } from "@/lib/prisma";
+import { requireProAccess } from "@/lib/check-tier";
 
 export async function evaluateOffer(offerDetails) {
   try {
+    // PRO-only feature
+    await requireProAccess();
+
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 

@@ -4,8 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { db } from "@/lib/prisma";
+import { requireProAccess } from "@/lib/check-tier";
 
 export async function optimizeLinkedInProfile(formData) {
+  // PRO-only feature
+  await requireProAccess();
+
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
