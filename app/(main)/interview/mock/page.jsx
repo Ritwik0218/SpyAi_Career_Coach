@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Quiz from "../_components/quiz";
+import { Suspense } from "react";
 
 export default function MockInterviewPage() {
   return (
@@ -22,7 +23,9 @@ export default function MockInterviewPage() {
         </div>
       </div>
 
-      <Quiz />
+      <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading Quiz...</div>}>
+        <Quiz />
+      </Suspense>
     </div>
   );
 }

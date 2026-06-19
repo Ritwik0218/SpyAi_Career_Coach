@@ -16,6 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { generateCoverLetter } from "@/actions/cover-letter";
 import useFetch from "@/hooks/use-fetch";
 import { coverLetterSchema } from "@/app/lib/schema";
@@ -30,8 +37,12 @@ export default function CoverLetterGenerator() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm({
     resolver: zodResolver(coverLetterSchema),
+    defaultValues: {
+      tone: "professional",
+    },
   });
 
   const {
@@ -68,8 +79,7 @@ export default function CoverLetterGenerator() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Form fields remain the same */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="companyName">Company Name</Label>
                 <Input
@@ -94,6 +104,30 @@ export default function CoverLetterGenerator() {
                 {errors.jobTitle && (
                   <p className="text-sm text-red-500">
                     {errors.jobTitle.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tone">Tone / Style</Label>
+                <Select
+                  defaultValue="professional"
+                  onValueChange={(value) => setValue("tone", value)}
+                >
+                  <SelectTrigger id="tone">
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional (Default)</SelectItem>
+                    <SelectItem value="creative">Creative</SelectItem>
+                    <SelectItem value="direct">Direct</SelectItem>
+                    <SelectItem value="humble">Humble</SelectItem>
+                    <SelectItem value="assertive">Assertive</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.tone && (
+                  <p className="text-sm text-red-500">
+                    {errors.tone.message}
                   </p>
                 )}
               </div>

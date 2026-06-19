@@ -4,16 +4,21 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
+import { checkUser } from "@/lib/checkUser";
 
 export async function updateUser(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    user = await checkUser();
+  }
+
+  if (!user) throw new Error("User not found and could not be synchronized");
 
   try {
     // Start a transaction to handle both operations
@@ -82,7 +87,7 @@ export async function updateUser(data) {
     );
 
     revalidatePath("/");
-    return result.user;
+    return { success: true, user: result.updatedUser };
   } catch (error) {
     console.error("Error updating user and industry:", error.message);
     throw new Error("Failed to update profile");
@@ -103,11 +108,19 @@ export async function getUserOnboardingStatus() {
       },
     });
 
+    if (!user) {
+      await checkUser();
+      return { isOnboarded: false };
+    }
+
     return {
       isOnboarded: !!user?.industry,
     };
   } catch (error) {
-    console.error("Error checking onboarding status:", error);
-    throw new Error("Failed to check onboarding status");
+    console.error("Error checking onboarding status, using fallback:", error);
+    return {
+      isOnboarded: false,
+      error: error.message,
+    };
   }
 }

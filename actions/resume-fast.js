@@ -17,7 +17,7 @@ function getGeminiModel() {
 
   try {
     const genAI = new GoogleGenerativeAI(key);
-    _model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    _model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || "gemini-2.5-flash" });
     return _model;
   } catch (err) {
     logFallback('resume_fast_gemini_init_failed', { message: err?.message || String(err) });
@@ -78,9 +78,11 @@ export async function getResume() {
   }
 }
 
-export async function saveResume({ resumeData }) {
+export async function saveResume(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
+
+  const content = data?.content || data?.resumeData || data;
 
   try {
     // Try database save with timeout
@@ -101,10 +103,10 @@ export async function saveResume({ resumeData }) {
 
     const savedResume = await db.resume.upsert({
       where: { userId: user.id },
-      update: { content: JSON.stringify(resumeData) },
+      update: { content: JSON.stringify(content) },
       create: {
         userId: user.id,
-        content: JSON.stringify(resumeData),
+        content: JSON.stringify(content),
       },
     });
 

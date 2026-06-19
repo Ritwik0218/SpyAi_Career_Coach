@@ -52,9 +52,7 @@ export default function RootLayout({ children }) {
       }}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      afterSignInUrl="/onboarding"
-      afterSignUpUrl="/onboarding"
-      afterSignOutUrl="/"
+      fallbackRedirectUrl="/onboarding"
     >
       <html lang="en" suppressHydrationWarning>
         <head>

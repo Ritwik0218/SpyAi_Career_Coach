@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { logFallback } from "@/lib/fallback-logger";
 
-export async function generateQuiz() {
+export async function generateQuiz(customSkill) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -19,7 +19,26 @@ export async function generateQuiz() {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `
+  const prompt = customSkill
+    ? `
+    Generate 10 technical interview questions for a professional on the specific skill/topic: "${customSkill}".
+    These should be industry-level, comprehensive questions, including data structures, algorithms, coding problems, or advanced concepts if applicable.
+    
+    Each question should be multiple choice with 4 options.
+    
+    Return the response in this JSON format only, no additional text:
+    {
+      "questions": [
+        {
+          "question": "string",
+          "options": ["string", "string", "string", "string"],
+          "correctAnswer": "string",
+          "explanation": "string"
+        }
+      ]
+    }
+  `
+    : `
     Generate 10 technical interview questions for a ${
       user.industry
     } professional${
@@ -44,14 +63,16 @@ export async function generateQuiz() {
   try {
     const model = getGeminiModel();
     if (!model) {
-      logFallback('interview_quiz_fallback', { userId: userId, industry: user.industry });
+      logFallback('interview_quiz_fallback', { userId: userId, industry: user.industry, customSkill });
       // AI not configured — return a small static quiz as fallback
       return [
         {
-          question: `What is a good practice when preparing for ${user.industry} interviews?`,
-          options: ["Practice problem solving", "Ignore job description", "Arrive unprepared", "Read social media"],
+          question: customSkill 
+            ? `What is a core concept or best practice when working with ${customSkill}?`
+            : `What is a good practice when preparing for ${user.industry} interviews?`,
+          options: ["Practice problem solving", "Ignore documentation", "Proceed without checking details", "Rely entirely on chance"],
           correctAnswer: "Practice problem solving",
-          explanation: "Preparing via practice improves familiarity with common questions and problem types."
+          explanation: `Preparing and checking standard concepts is essential when building expertise in ${customSkill || user.industry}.`
         }
       ];
     }

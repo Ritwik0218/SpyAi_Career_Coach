@@ -16,7 +16,7 @@ const withTimeout = (promise, timeoutMs = 60000) => {
   ]);
 };
 
-export async function saveResume(content) {
+export async function saveResume(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -26,9 +26,11 @@ export async function saveResume(content) {
 
   if (!user) throw new Error("User not found");
 
+  const actualContent = data?.content || data?.resumeData || data;
+
   try {
     // Convert content object to JSON string for database storage
-    const contentString = JSON.stringify(content);
+    const contentString = JSON.stringify(actualContent);
     
     const resume = await db.resume.upsert({
       where: {

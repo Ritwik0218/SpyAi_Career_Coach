@@ -22,7 +22,7 @@ model User {
   assessments     Assessment[]
   coverLetter     CoverLetter[]
   resume          Resume?
-  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])
+  jobApplications JobApplication[]
 }
 
 model Assessment {
@@ -67,7 +67,8 @@ model CoverLetter {
 
 model IndustryInsight {
   id                String   @id @default(cuid())
-  industry          String   @unique
+  industry          String
+  country           String   @default("Worldwide")
   salaryRanges      Json[]
   growthRate        Float
   demandLevel       String
@@ -77,9 +78,9 @@ model IndustryInsight {
   recommendedSkills String[]
   lastUpdated       DateTime @default(now())
   nextUpdate        DateTime
-  users             User[]
 
-  @@index([industry])
+  @@unique([industry, country])
+  @@index([industry, country])
 }
 
 model FallbackEvent {
@@ -90,4 +91,44 @@ model FallbackEvent {
   processed Boolean  @default(false)
 
   @@index([event, processed])
+}
+
+model JobApplication {
+  id             String    @id @default(cuid())
+  userId         String
+  companyName    String
+  jobTitle       String
+  status         String    @default("SAVED") // SAVED, APPLIED, INTERVIEWING, OFFERED, REJECTED
+  url            String?   // Link to job posting
+  salary         String?
+  location       String?
+  notes          String?   @db.Text
+  appliedDate    DateTime?
+  interviewDate  DateTime?
+  contactName    String?
+  contactEmail   String?
+  followUpDate   DateTime?
+  lastActionDate DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model CodingProblem {
+  id                String   @id // Will be string like "two-sum"
+  title             String
+  category          String
+  difficulty        String
+  link              String?
+  description       String?  @db.Text
+  examples          Json?    // Array of { input, output }
+  starterCode       Json?    // Object with language keys mapping to code
+  solutionCode      Json?    // Object with language keys mapping to code
+  testExecutionCode Json?    // Object with language keys mapping to code
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([category])
 }

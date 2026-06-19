@@ -5,9 +5,9 @@ import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { logFallback } from "@/lib/fallback-logger";
 
-export const generateAIInsights = async (industry) => {
+export const generateAIInsights = async (industry, country = "Worldwide") => {
   const prompt = `
-          Analyze the current state of the ${industry} industry and provide insights in ONLY the following JSON format without any additional notes or explanations:
+          Analyze the current state of the ${industry} industry in ${country} and provide insights in ONLY the following JSON format without any additional notes or explanations:
           {
             "salaryRanges": [
               { "role": "string", "min": number, "max": number, "median": number, "location": "string" }
@@ -22,18 +22,20 @@ export const generateAIInsights = async (industry) => {
           
           IMPORTANT: Return ONLY the JSON. No additional text, notes, or markdown formatting.
           Include at least 5 common roles for salary ranges.
+          For the "role" field, strictly use specific job titles (e.g., "Frontend Developer", "Machine Learning Engineer", "Product Manager") rather than generic experience levels like "Entry Level" or "Senior".
+          All salary numbers should be representative of the ${country} market (convert to USD equivalent if necessary, or just use typical numbers for that region).
           Growth rate should be a percentage.
           Include at least 5 skills and trends.
         `;
 
   const model = getGeminiModel();
   if (!model) {
-    logFallback('dashboard_insights_fallback', { industry });
+    logFallback('dashboard_insights_fallback', { industry, country });
     // AI not configured — return a conservative fallback
     return {
       salaryRanges: [
-        { role: "Senior", min: 60000, max: 120000, median: 90000, location: "Remote" },
-        { role: "Mid", min: 40000, max: 80000, median: 60000, location: "Remote" }
+        { role: "Senior", min: 60000, max: 120000, median: 90000, location: country },
+        { role: "Mid", min: 40000, max: 80000, median: 60000, location: country }
       ],
       growthRate: 3,
       demandLevel: "Medium",
@@ -52,33 +54,43 @@ export const generateAIInsights = async (industry) => {
   return JSON.parse(cleanedText);
 };
 
-export async function getIndustryInsights() {
+export async function getIndustryInsights(country = "Worldwide") {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
-    include: {
-      industryInsight: true,
-    },
   });
 
   if (!user) throw new Error("User not found");
 
-  // If no insights exist, generate them
-  if (!user.industryInsight) {
-    const insights = await generateAIInsights(user.industry);
+  const targetIndustry = user.industry || "Software Engineering";
 
-    const industryInsight = await db.industryInsight.create({
+  const industryInsight = await db.industryInsight.findUnique({
+    where: {
+      industry_country: {
+        industry: targetIndustry,
+        country: country
+      }
+    }
+  });
+
+  // If no insights exist for this country, generate them
+  if (!industryInsight) {
+    const targetIndustry = user.industry || "Software Engineering";
+    const insights = await generateAIInsights(targetIndustry, country);
+
+    const newInsight = await db.industryInsight.create({
       data: {
-        industry: user.industry,
+        industry: targetIndustry,
+        country: country,
         ...insights,
         nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
 
-    return industryInsight;
+    return newInsight;
   }
 
-  return user.industryInsight;
+  return industryInsight;
 }

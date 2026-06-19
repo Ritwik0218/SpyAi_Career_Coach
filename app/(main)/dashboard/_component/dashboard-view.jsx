@@ -1,6 +1,8 @@
 "use client";
 
 import React, { lazy, Suspense } from "react";
+import Link from 'next/link';
+import { useAuth, useUser } from '@clerk/nextjs';
 import {
   BarChart,
   Bar,
@@ -28,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ATSDashboardCard } from "./ats-dashboard-card";
+import { LinkedInDashboardCard } from "./linkedin-dashboard-card";
 
 // Loading component for chart
 function ChartSkeleton() {
@@ -82,7 +85,10 @@ const DashboardView = ({ insights }) => {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-        <Badge variant="outline" className="w-fit">Last updated: {lastUpdatedDate}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="w-fit">Last updated: {lastUpdatedDate}</Badge>
+          <AdminLink />
+        </div>
       </div>
 
       {/* Market Overview Cards */}
@@ -162,29 +168,54 @@ const DashboardView = ({ insights }) => {
             <Suspense fallback={<ChartSkeleton />}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salaryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <defs>
+                    <linearGradient id="colorMin" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
+                    </linearGradient>
+                    <linearGradient id="colorMedian" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.2}/>
+                    </linearGradient>
+                    <linearGradient id="colorMax" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0.2}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-20" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
+                    tickMargin={10}
+                    className="text-muted-foreground"
                   />
                   <YAxis 
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
+                    tickFormatter={(value) => `$${value}k`}
+                    className="text-muted-foreground"
                   />
                   <Tooltip
+                    cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium text-sm">{label}</p>
-                            {payload.map((item) => (
-                              <p key={item.name} className="text-xs">
-                                <span style={{ color: item.color }}>●</span> {item.name}: ${item.value}K
-                              </p>
-                            ))}
+                          <div className="bg-background/95 backdrop-blur-md border border-border rounded-xl p-4 shadow-xl">
+                            <p className="font-semibold text-sm mb-2">{label}</p>
+                            <div className="space-y-1">
+                              {payload.map((item) => (
+                                <p key={item.name} className="text-xs flex items-center justify-between gap-4">
+                                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                                    <span className="h-2 w-2 rounded-full" style={{ background: item.color || item.fill }}></span>
+                                    {item.name}:
+                                  </span>
+                                  <span className="font-medium text-foreground">${item.value}k</span>
+                                </p>
+                              ))}
+                            </div>
                           </div>
                         );
                       }
@@ -193,21 +224,24 @@ const DashboardView = ({ insights }) => {
                   />
                   <Bar 
                     dataKey="min" 
-                    fill="#94a3b8" 
+                    fill="url(#colorMin)" 
                     name="Min Salary" 
-                    radius={[2, 2, 0, 0]}
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
                   />
                   <Bar 
                     dataKey="median" 
-                    fill="#64748b" 
+                    fill="url(#colorMedian)" 
                     name="Median Salary" 
-                    radius={[2, 2, 0, 0]}
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
                   />
                   <Bar 
                     dataKey="max" 
-                    fill="#475569" 
+                    fill="url(#colorMax)" 
                     name="Max Salary" 
-                    radius={[2, 2, 0, 0]}
+                    radius={[4, 4, 0, 0]}
+                    barSize={20}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -216,16 +250,16 @@ const DashboardView = ({ insights }) => {
         </CardContent>
       </Card>
 
-      {/* Professional Growth Tools */}
+      {/* Elite Toolkit Section */}
       <div className="space-y-4">
         <div className="text-center md:text-left">
-          <h2 className="text-xl md:text-2xl font-bold">Professional Growth Tools</h2>
-          <p className="text-muted-foreground text-sm md:text-base">Enhance your career with AI-powered tools</p>
+          <h2 className="text-2xl font-extrabold tracking-tight text-white">The Engineering Toolkit</h2>
+          <p className="text-gray-400 font-medium text-sm md:text-base">Elite AI-powered systems to command your career progression</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
           <ATSDashboardCard />
-          {/* More professional tools can be added here */}
+          <LinkedInDashboardCard />
         </div>
       </div>
 
@@ -271,3 +305,23 @@ const DashboardView = ({ insights }) => {
 };
 
 export default DashboardView;
+
+function AdminLink() {
+  // Client-side admin check. Expose admin config via NEXT_PUBLIC_ env vars.
+  const { userId } = useAuth();
+  const { user } = useUser();
+
+  const adminIds = (process.env.NEXT_PUBLIC_ADMIN_CLERK_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+  const isAdminById = userId && adminIds.includes(userId);
+  const email = user?.primaryEmail?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || user?.email;
+  const isAdminByEmail = email && adminEmails.includes(String(email).toLowerCase());
+
+  const isAdmin = isAdminById || isAdminByEmail;
+  if (!isAdmin) return null;
+
+  return (
+    <Link href="/admin/fallbacks" className="text-sm text-primary underline">Admin: Fallbacks</Link>
+  );
+}

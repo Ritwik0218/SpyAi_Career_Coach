@@ -15,6 +15,13 @@ export async function generateCoverLetter(data) {
 
   if (!user) throw new Error("User not found");
 
+  const toneInstruction = {
+    creative: "Use a creative, engaging, and story-driven tone, showing personality and thinking outside the box, while remaining professional.",
+    direct: "Use a direct, highly concise, and professional tone, focusing on facts, key metrics, and straight-to-the-point achievements.",
+    humble: "Use a humble, appreciative, and team-oriented tone, highlighting collaboration, readiness to learn, and value to the team.",
+    assertive: "Use an assertive, highly confident, and results-driven tone, emphasizing leadership, bold achievements, and your value-add.",
+  }[data.tone?.toLowerCase()] || "Use a professional, enthusiastic tone.";
+
   const prompt = `
     Write a professional cover letter for a ${data.jobTitle} position at ${
     data.companyName
@@ -30,7 +37,7 @@ export async function generateCoverLetter(data) {
     ${data.jobDescription}
     
     Requirements:
-    1. Use a professional, enthusiastic tone
+    1. ${toneInstruction}
     2. Highlight relevant skills and experience
     3. Show understanding of the company's needs
     4. Keep it concise (max 400 words)

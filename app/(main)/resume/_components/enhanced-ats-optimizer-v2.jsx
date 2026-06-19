@@ -62,6 +62,37 @@ export function EnhancedATSOptimizer({
   const [targetRoleInput, setTargetRoleInput] = useState(targetRole || "");
   const [companyNameInput, setCompanyNameInput] = useState(companyName || "");
 
+  const getKeywordMatches = () => {
+    if (!resumeContent || !keywords.length) return [];
+    const lowerContent = typeof resumeContent === 'string' ? resumeContent.toLowerCase() : '';
+    
+    return keywords.map(keyword => {
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Simple match check fallback if regex fails
+      try {
+        const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+        const matches = lowerContent.match(regex);
+        const count = matches ? matches.length : 0;
+        return {
+          keyword,
+          count,
+          matched: count > 0
+        };
+      } catch (e) {
+        const matched = lowerContent.includes(keyword.toLowerCase());
+        return {
+          keyword,
+          count: matched ? 1 : 0,
+          matched
+        };
+      }
+    });
+  };
+
+  const matchDetails = getKeywordMatches();
+  const matchedCount = matchDetails.filter(m => m.matched).length;
+  const matchRate = keywords.length ? Math.round((matchedCount / keywords.length) * 100) : 0;
+
   const {
     loading: isOptimizing,
     fn: optimizeResumeFn,
@@ -629,19 +660,58 @@ export function EnhancedATSOptimizer({
               </Button>
 
               {keywords.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-800">
-                    Recommended Keywords for {targetRoleInput}:
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {keywords.map((keyword, index) => (
-                      <Badge key={`keyword-${index}`} variant="secondary" className="bg-primary/10 text-primary">
-                        {keyword}
-                      </Badge>
-                    ))}
+                <div className="space-y-6 pt-4 border-t border-muted/50">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm font-semibold">
+                      <span className="text-gray-700">Keyword Match Rate</span>
+                      <span className={`${matchRate >= 70 ? "text-emerald-600" : matchRate >= 40 ? "text-amber-600" : "text-red-500"}`}>
+                        {matchRate}% ({matchedCount} of {keywords.length} matched)
+                      </span>
+                    </div>
+                    <Progress value={matchRate} className="h-2.5 bg-muted" />
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Tip: Incorporate these keywords naturally throughout your resume to improve ATS compatibility.
+
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                      Visual Keyword Match Heatmap:
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                      {matchDetails.map((item, index) => {
+                        const intensityClass = item.count >= 3 
+                          ? "bg-emerald-500/20 text-emerald-700 border-emerald-300"
+                          : item.count === 2
+                          ? "bg-emerald-500/15 text-emerald-600 border-emerald-200"
+                          : item.count === 1
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-200/50"
+                          : "bg-red-500/5 text-red-500 border-red-200/40 hover:bg-red-500/10";
+                        
+                        return (
+                          <div
+                            key={`kw-${index}`}
+                            className={`flex items-center justify-between border rounded-lg p-2.5 text-xs transition-all duration-200 ${intensityClass}`}
+                          >
+                            <span className="font-semibold truncate pr-1" title={item.keyword}>{item.keyword}</span>
+                            <span className="flex items-center gap-1 flex-shrink-0">
+                              {item.matched ? (
+                                <>
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                                  <span className="font-bold opacity-90">{item.count}x</span>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0" />
+                                  <span className="font-bold opacity-80">0x</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-gray-500 italic leading-relaxed">
+                    Tip: Red boxes show target keywords missing in your resume. Green boxes indicate matched keywords; deeper green tones highlight higher keyword density. Incorporate missing keywords naturally throughout your experience and skills sections.
                   </p>
                 </div>
               )}
