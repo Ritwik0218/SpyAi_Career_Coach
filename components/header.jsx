@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
+import { ThemeToggle } from "./theme-toggle";
 
 const NAV_ITEMS = [
   {
@@ -54,6 +55,7 @@ const NAV_ITEMS = [
       { href: "/job-tracker", label: "Job Tracker", icon: Briefcase, description: "Manage & track applications" },
       { href: "/ai-cover-letter", label: "Cover Letter", icon: PenBox, description: "AI-generated, fully editable" },
       { href: "/linkedin-optimizer", label: "LinkedIn Optimizer", icon: Linkedin, description: "Profile SEO & Visibility" },
+      { href: "/networking", label: "Cold Emails", icon: PenBox, description: "AI Networking Email Generator" },
       { href: "/dashboard", label: "Industry Insights", icon: BarChart3, description: "Salary trends & market data" },
     ],
   },
@@ -160,6 +162,8 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <ThemeToggle />
+
             <UserButton
               appearance={{
                 elements: {
@@ -181,6 +185,7 @@ export default function Header() {
           </SignedIn>
 
           <SignedOut>
+            <ThemeToggle />
             <SignInButton>
               <Button variant="outline" size="sm">Sign In</Button>
             </SignInButton>
@@ -197,6 +202,9 @@ export default function Header() {
                 </Button>
               </Link>
             )}
+            
+            <ThemeToggle />
+            
             <UserButton
               appearance={{ elements: { avatarBox: "w-8 h-8" } }}
               afterSignOutUrl="/"
@@ -215,6 +223,11 @@ export default function Header() {
               <Button variant="outline" size="sm">Sign In</Button>
             </SignInButton>
           </SignedOut>
+          
+          <SignedOut>
+            <ThemeToggle />
+          </SignedOut>
+
           <SignedIn>
             <Button
               variant="ghost"
