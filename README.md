@@ -235,7 +235,7 @@ Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
 **Ritwik Mathur**
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Ritwik_Mathur-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/ritwik-mathur-53ba20255/)
-[![GitHub](https://img.shields.io/badge/GitHub-ritwik--mathur0218-181717?style=flat-square&logo=github)](https://github.com/ritwik-mathur0218)
+[![GitHub](https://img.shields.io/badge/GitHub-ritwik--mathur0218-181717?style=flat-square&logo=github)](https://github.com/Ritwik0218)
 
 ---
 
