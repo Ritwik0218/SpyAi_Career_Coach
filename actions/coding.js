@@ -73,28 +73,74 @@ export async function generateCategoryCheatsheet(category, language, problems = 
   }
 
   // If not in DB, generate it
-  let prompt = "";
-  
   if (category === "ALL") {
-    prompt = `You are an expert Data Structures and Algorithms instructor.
-Create a MASSIVE, comprehensive, premium cheatsheet covering the ENTIRE NeetCode 150 (all categories) using the ${language} programming language.
+    // Group problems by category
+    const problemsByCategory = {};
+    for (const p of problems) {
+      if (!problemsByCategory[p.category]) problemsByCategory[p.category] = [];
+      problemsByCategory[p.category].push(p.title);
+    }
+    const categoriesList = Object.keys(problemsByCategory);
+    
+    // Chunk categories into 3 groups
+    const chunkSize = Math.ceil(categoriesList.length / 3);
+    const categoryChunks = [];
+    for (let i = 0; i < categoriesList.length; i += chunkSize) {
+      categoryChunks.push(categoriesList.slice(i, i + chunkSize));
+    }
 
-Structure the Markdown output exactly like this:
-# Complete NeetCode 150 Cheatsheet (${language})
+    try {
+      const { getGeminiModel } = await import("@/lib/gemini");
+      const model = getGeminiModel();
 
-For each major category (Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Tries, Heap / Priority Queue, Backtracking, Graphs, Advanced Graphs, 1-D DP, 2-D DP, Greedy, Intervals, Math & Geometry, Bit Manipulation):
+      // Fire concurrent requests
+      const chunkPromises = categoryChunks.map(async (chunkCats, index) => {
+        let chunkDetails = "";
+        for (const cat of chunkCats) {
+          chunkDetails += `\nCategory: ${cat}\nProblems: ${problemsByCategory[cat].join(", ")}\n`;
+        }
+
+        const prompt = `You are an expert Data Structures and Algorithms instructor.
+Create a section of a MASSIVE cheatsheet for the NeetCode 150 using the ${language} programming language.
+${index === 0 ? `Include a main title: # Complete NeetCode 150 Cheatsheet (${language})\n` : ""}
+Here are the categories and problems for this section:
+${chunkDetails}
+
+For EACH category provided above, structure the Markdown output EXACTLY like this:
 ## [Category Name]
 - **Core Concepts**: Brief summary.
 - **Common Boilerplate**: 1 standard code template in ${language}.
-- **Key Problems**: Name the top 3 most important problems in this category, provide a 1-sentence hint, and the optimal Big O complexity.
+### 🧩 Key Problems & Approaches
+For EACH problem listed in this category:
+- **Problem**: Name
+- **Hint/Approach**: 1-2 sentences on the trick to solving it.
+- **Time & Space**: Big O complexity.
+- **Code Snippet**: The optimal core logic (doesn't have to be the full class, just the essential function) in ${language}.
 
-## 🎯 Final Ultimate Quiz
-Provide 5 challenging multiple-choice questions testing concepts across all categories. Include answers at the very bottom.
+${index === categoryChunks.length - 1 ? `\n## 🎯 Final Ultimate Quiz\nProvide 5 challenging multiple-choice questions testing concepts across all categories. Include answers at the very bottom.` : ""}
 
-Make it extremely readable and formatted beautifully with markdown.`;
+Make it extremely readable and formatted beautifully with markdown. BE CONCISE. Do not add conversational fluff.`;
+
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+      });
+
+      const chunkResults = await Promise.all(chunkPromises);
+      const content = chunkResults.join("\n\n---\n\n");
+
+      // Save to DB
+      await db.codingCheatsheet.create({
+        data: { category, language, content }
+      });
+
+      return content;
+    } catch (err) {
+      console.error("Cheatsheet Generation Error:", err);
+      throw new Error("Failed to generate massive cheatsheet. " + err.message);
+    }
   } else {
     const problemTitles = problems.map(p => p.title).join(", ");
-    prompt = `You are an expert Data Structures and Algorithms instructor.
+    const prompt = `You are an expert Data Structures and Algorithms instructor.
 Create a comprehensive, premium cheatsheet for the NeetCode category "${category}" using the ${language} programming language.
 
 The problems in this category are: ${problemTitles}.
@@ -120,26 +166,22 @@ Provide 3 short, challenging multiple-choice or short-answer questions to test t
 
 Make it extremely readable and formatted beautifully with markdown.
 `;
-  }
 
-  try {
-    const { getGeminiModel } = await import("@/lib/gemini");
-    const model = getGeminiModel();
-    const result = await model.generateContent(prompt);
-    const content = result.response.text();
+    try {
+      const { getGeminiModel } = await import("@/lib/gemini");
+      const model = getGeminiModel();
+      const result = await model.generateContent(prompt);
+      const content = result.response.text();
 
-    // Save to DB
-    await db.codingCheatsheet.create({
-      data: {
-        category,
-        language,
-        content
-      }
-    });
+      // Save to DB
+      await db.codingCheatsheet.create({
+        data: { category, language, content }
+      });
 
-    return content;
-  } catch (err) {
-    console.error("Cheatsheet Generation Error:", err);
-    throw new Error("Failed to generate cheatsheet.");
+      return content;
+    } catch (err) {
+      console.error("Cheatsheet Generation Error:", err);
+      throw new Error("Failed to generate cheatsheet.");
+    }
   }
 }

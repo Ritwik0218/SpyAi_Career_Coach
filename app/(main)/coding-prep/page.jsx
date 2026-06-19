@@ -56,7 +56,7 @@ export default function CodingPrepDashboard() {
   const handleGenerateCheatsheet = async () => {
     setGeneratingCheat(true);
     try {
-      let categoryProblems = [];
+      let categoryProblems = problems;
       if (selectedCategory !== "ALL") {
         categoryProblems = problems.filter(p => p.category === selectedCategory);
         if (categoryProblems.length === 0) throw new Error("No problems found in this category.");
