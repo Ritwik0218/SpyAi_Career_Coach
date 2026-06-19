@@ -36,7 +36,7 @@ export default async function BlogPostPage({ params }) {
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">{post.title}</h1>
         </div>
 
-        <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-lg border">
+        <div className="relative w-full h-[250px] sm:h-[350px] md:h-[500px] rounded-xl overflow-hidden shadow-lg border">
           <Image 
             src={post.imageUrl} 
             alt={post.title} 
@@ -46,7 +46,7 @@ export default async function BlogPostPage({ params }) {
           />
         </div>
 
-        <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl">
+        <div className="prose md:prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-xl">
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
       </article>
