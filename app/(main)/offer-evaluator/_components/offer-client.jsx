@@ -224,7 +224,7 @@ export default function OfferClient() {
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="year" className="text-xs" />
                       <YAxis 
-                        tickFormatter={(value) => \`\$\${value / 1000}k\`} 
+                        tickFormatter={(value) => "$" + (value / 1000) + "k"} 
                         className="text-xs" 
                       />
                       <Tooltip 
