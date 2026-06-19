@@ -106,11 +106,15 @@ export async function generateCareerSyllabus(targetRole) {
 
   if (!user) throw new Error("User not found");
 
+  const industry = user.industry || 'unknown';
+  const experience = user.experience || 'some';
+  const skills = user.skills?.join(', ') || 'none specified';
+
   const prompt = `
-    The user's current industry is \${user.industry || 'unknown'}, with \${user.experience || 'some'} years of experience.
-    Their current skills are: \${user.skills?.join(', ') || 'none specified'}.
+    The user's current industry is ${industry}, with ${experience} years of experience.
+    Their current skills are: ${skills}.
     
-    They want to transition or level up to the following target role: "\${targetRole}".
+    They want to transition or level up to the following target role: "${targetRole}".
     
     Perform a gap analysis between their current skills and the target role. 
     Then generate a structured, 4-week learning syllabus to help them bridge this gap.

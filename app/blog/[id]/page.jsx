@@ -8,7 +8,7 @@ import ReactMarkdown from "react-markdown";
 export const dynamic = "force-dynamic";
 
 export default async function BlogPostPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
 
   const post = await db.blogPost.findUnique({
     where: { id }
