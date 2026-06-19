@@ -55,3 +55,20 @@ next-env.d.ts
 # IDE history and cache
 .history/
 .vscode/settings.json
+
+# Debug / temporary test files (keep repo clean)
+test-*.js
+final-test.js
+*.txt
+*_TROUBLESHOOTING.md
+*_DOCUMENTATION.md
+*_PERFECTED.md
+*_FIXED.md
+*_SUCCESS.md
+*_READY.md
+*_SUMMARY.md
+*_AUDIT_REPORT.md
+*.tex
+RESUME_BUILDER_DOCS.md
+DEPLOYMENT.md
+
