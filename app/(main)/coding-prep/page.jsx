@@ -56,8 +56,11 @@ export default function CodingPrepDashboard() {
   const handleGenerateCheatsheet = async () => {
     setGeneratingCheat(true);
     try {
-      const categoryProblems = problems.filter(p => p.category === selectedCategory);
-      if (categoryProblems.length === 0) throw new Error("No problems found in this category.");
+      let categoryProblems = [];
+      if (selectedCategory !== "ALL") {
+        categoryProblems = problems.filter(p => p.category === selectedCategory);
+        if (categoryProblems.length === 0) throw new Error("No problems found in this category.");
+      }
       
       const markdown = await generateCategoryCheatsheet(selectedCategory, selectedLanguage, categoryProblems);
       setCheatsheetData(markdown);
@@ -99,11 +102,12 @@ export default function CodingPrepDashboard() {
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       const opt = {
-        margin:       10,
+        margin:       [15, 15, 15, 15],
         filename:     `cheatsheet_${selectedCategory.replace(/ /g, "_")}_${selectedLanguage}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
       };
       
       toast.info("Generating PDF... please wait.");

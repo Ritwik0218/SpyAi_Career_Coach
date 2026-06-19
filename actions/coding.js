@@ -2,6 +2,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/prisma";
 
 export async function getNeetCodeTutorResponse(problemId, userCode, language, chatHistory, problemContext) {
   const { userId } = await auth();
@@ -52,8 +53,6 @@ INSTRUCTIONS:
     throw new Error("Failed to get response from AI Tutor.");
   }
 }
-
-import { db } from "@/lib/prisma";
 
 export async function generateCategoryCheatsheet(category, language, problems = []) {
   const { userId } = await auth();
