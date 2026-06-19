@@ -132,3 +132,15 @@ model CodingProblem {
 
   @@index([category])
 }
+
+model CodingCheatsheet {
+  id        String   @id @default(cuid())
+  category  String   // The specific category or "ALL" for all 150 questions
+  language  String   // e.g. "Python", "JavaScript"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([category, language])
+  @@index([category, language])
+}

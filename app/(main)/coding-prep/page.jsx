@@ -7,7 +7,7 @@ import { generateCategoryCheatsheet } from "@/actions/coding";
 import { categories } from "@/data/neetcode150";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Code2, CheckCircle2, Circle, ArrowRight, Loader2, FileCode2, Copy, Check } from "lucide-react";
+import { Code2, CheckCircle2, Circle, ArrowRight, Loader2, FileCode2, Copy, Check, Download, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -71,6 +71,44 @@ export default function CodingPrepDashboard() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Cheatsheet copied to clipboard!");
+    }
+  };
+
+  const handleDownloadMarkdown = () => {
+    if (!cheatsheetData) return;
+    const blob = new Blob([cheatsheetData], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cheatsheet_${selectedCategory.replace(/ /g, "_")}_${selectedLanguage}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Markdown downloaded!");
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!cheatsheetData) return;
+    
+    // We need to capture the rendered markdown div to convert to PDF
+    const element = document.getElementById("cheatsheet-content");
+    if (!element) return;
+    
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       10,
+        filename:     `cheatsheet_${selectedCategory.replace(/ /g, "_")}_${selectedLanguage}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      toast.info("Generating PDF... please wait.");
+      await html2pdf().set(opt).from(element).save();
+      toast.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate PDF.");
     }
   };
 
@@ -187,6 +225,7 @@ export default function CodingPrepDashboard() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="ALL">ALL (Full 150 Questions)</SelectItem>
                       {categories.map(cat => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                       ))}
@@ -226,13 +265,19 @@ export default function CodingPrepDashboard() {
 
               {cheatsheetData && (
                 <div className="mt-8 relative">
-                  <div className="absolute right-4 top-4">
+                  <div className="flex justify-end gap-2 mb-2">
+                    <Button variant="outline" size="sm" onClick={handleDownloadMarkdown} className="gap-2">
+                      <FileText className="h-4 w-4" /> Download .MD
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-2 text-indigo-500 border-indigo-200 hover:bg-indigo-50">
+                      <Download className="h-4 w-4" /> Download PDF
+                    </Button>
                     <Button variant="secondary" size="sm" onClick={handleCopyCheatsheet} className="gap-2">
                       {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      {copied ? "Copied" : "Copy Markdown"}
+                      {copied ? "Copied" : "Copy"}
                     </Button>
                   </div>
-                  <div className="p-6 bg-muted/30 rounded-lg border">
+                  <div className="p-8 bg-card rounded-lg border shadow-sm" id="cheatsheet-content">
                     <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
                       <ReactMarkdown>{cheatsheetData}</ReactMarkdown>
                     </div>
