@@ -130,9 +130,25 @@ export default function Header() {
             </Link>
 
             {/* Growth Tools Dropdown */}
+            {/* Desktop Pricing Link */}
+            <Link href="/pricing">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                <CreditCard className="h-4 w-4 mr-2" />
+                Pricing
+              </Button>
+            </Link>
+
+            {/* Desktop Blog Link */}
+            <Link href="/blog">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                <FileText className="h-4 w-4 mr-2" />
+                Blog
+              </Button>
+            </Link>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" className="gap-2">
+                <Button variant="ghost" className="text-muted-foreground hover:text-primary">
                   <StarsIcon className="h-4 w-4" />
                   Growth Tools
                   <ChevronDown className="h-3.5 w-3.5 opacity-70" />
@@ -198,17 +214,19 @@ export default function Header() {
 
         {/* Mobile: user + hamburger */}
         <div className="flex md:hidden items-center gap-2">
-          <SignedIn>
+            {/* Admin badge */}
             {isAdmin && (
-              <Link href="/admin/status">
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-purple-400">
-                  <Shield className="h-4 w-4 animate-pulse" />
+              <Link href="/admin/analytics">
+                <Button variant="outline" size="sm" className="border-purple-500/50 text-purple-500 hover:bg-purple-500/10">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
                 </Button>
               </Link>
             )}
             
             <ThemeToggle />
             
+            <SignedIn>
             <UserButton
               appearance={{ elements: { avatarBox: "w-8 h-8" } }}
               afterSignOutUrl="/"

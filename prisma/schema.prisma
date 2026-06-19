@@ -24,6 +24,8 @@ model User {
   resume          Resume?
   jobApplications JobApplication[]
   linkedInAnalysis LinkedInAnalysis?
+  tier            String           @default("FREE")
+  payments        Payment[]
 }
 
 model Assessment {
@@ -158,3 +160,28 @@ model LinkedInAnalysis {
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id])
 }
+
+model Payment {
+  id                String   @id @default(cuid())
+  userId            String
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String?  @unique
+  amount            Int
+  currency          String   @default("INR")
+  status            String   @default("CREATED") // CREATED, SUCCESS, FAILED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
