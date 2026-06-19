@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle2, Circle, GraduationCap, Flame, Building2, Landmark, Trophy, Award, LandmarkIcon, MessageCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, GraduationCap, Flame, Building2, Landmark, Trophy, Award, LandmarkIcon, MessageCircle, Mic } from "lucide-react";
 
 export default async function InterviewPrepPage() {
   const assessments = await getAssessments() || [];
@@ -77,6 +77,12 @@ export default async function InterviewPrepPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3 w-full md:w-auto">
+          <Link href="/interview/behavioral" className="w-full md:w-auto">
+            <Button className="w-full md:w-auto gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 text-white shadow-md">
+              <Mic className="h-4 w-4" />
+              Behavioral Mock (Voice)
+            </Button>
+          </Link>
           <Link href="/interview/negotiation" className="w-full md:w-auto">
             <Button className="w-full md:w-auto gap-2 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/95 text-white shadow-md">
               <MessageCircle className="h-4 w-4" />

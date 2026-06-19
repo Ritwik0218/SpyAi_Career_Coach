@@ -74,7 +74,7 @@ export default function JobCard({ job }) {
             } else if (job.status === "APPLIED" && job.appliedDate) {
               const daysSinceApplied = Math.floor((new Date() - new Date(job.appliedDate)) / (1000 * 60 * 60 * 24));
               if (daysSinceApplied >= 7) {
-                attentionMessage = `Follow up needed (>7 days)`;
+                attentionMessage = `Ghosting Risk: Follow up needed (>7 days)`;
               }
             }
             

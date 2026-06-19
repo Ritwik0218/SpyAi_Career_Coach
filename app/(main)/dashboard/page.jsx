@@ -7,6 +7,8 @@ import DashboardView from "./_component/dashboard-view";
 import { getIndustryInsights } from "@/actions/dashboard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Loading component for better UX
 function DashboardSkeleton() {
@@ -143,6 +145,17 @@ export default function DashboardPage() {
       </div>
 
       </div>
+      
+      {/* Quick Actions */}
+      <div className="flex gap-4 mb-6">
+        <Link href="/dashboard/career-bridge">
+          <Button variant="outline" className="gap-2 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10">
+            <Globe className="h-4 w-4" />
+            Launch Career Bridge
+          </Button>
+        </Link>
+      </div>
+
       <DashboardView insights={insights} />
     </div>
   );

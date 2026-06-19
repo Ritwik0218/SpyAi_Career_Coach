@@ -192,3 +192,136 @@ export async function getAssessments() {
     throw new Error("Failed to fetch assessments");
   }
 }
+
+export async function generateBehavioralQuestions() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+    select: { industry: true, experience: true }
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const prompt = `
+    Generate 3 behavioral interview questions for a professional in the \${user.industry} industry with \${user.experience || 'some'} years of experience.
+    The questions should be open-ended "Tell me about a time..." style questions.
+    
+    Return the response in this JSON format only, no additional text:
+    {
+      "questions": [
+        "string", "string", "string"
+      ]
+    }
+  `;
+
+  try {
+    const model = getGeminiModel();
+    if (!model) {
+      logFallback('interview_behavioral_fallback', { userId });
+      return [
+        "Tell me about a time you had to overcome a significant challenge at work.",
+        "Describe a situation where you had a conflict with a coworker and how you resolved it.",
+        "Give me an example of a time when you showed initiative."
+      ];
+    }
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const cleanedText = text.replace(/\`\`\`(?:json)?\\n?/g, "").trim();
+    const parsed = JSON.parse(cleanedText);
+    return parsed.questions;
+  } catch (error) {
+    console.error("Error generating behavioral questions:", error);
+    throw new Error("Failed to generate behavioral questions");
+  }
+}
+
+export async function analyzeBehavioralResponse(question, transcript, timeSpentSeconds, fillerCount) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const prompt = `
+    The user was asked the following behavioral interview question:
+    "\${question}"
+    
+    Here is the live transcript of their spoken answer:
+    "\${transcript}"
+    
+    They took \${timeSpentSeconds} seconds to answer, and used \${fillerCount} filler words.
+    
+    Analyze their answer based on the STAR method (Situation, Task, Action, Result) and general communication skills.
+    
+    Return a JSON response with:
+    - "score": A number from 0 to 100 representing overall confidence and quality.
+    - "feedback": A 2-3 sentence paragraph providing constructive feedback. Include feedback on their speaking pace and use of filler words.
+    - "starAnalysis": A short object evaluating if they hit S, T, A, R successfully.
+    
+    Format:
+    {
+      "score": number,
+      "feedback": "string",
+      "starAnalysis": {
+        "Situation": "string (Pass/Fail/Partial)",
+        "Task": "string",
+        "Action": "string",
+        "Result": "string"
+      }
+    }
+  `;
+
+  try {
+    const model = getGeminiModel();
+    if (!model) {
+      logFallback('interview_behavioral_analysis_fallback', { userId });
+      return {
+        score: 75,
+        feedback: "Your response was decent, but without AI analysis configured, detailed STAR feedback is unavailable. Try to reduce filler words.",
+        starAnalysis: { Situation: "Pass", Task: "Pass", Action: "Pass", Result: "Pass" }
+      };
+    }
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const cleanedText = text.replace(/\`\`\`(?:json)?\\n?/g, "").trim();
+    return JSON.parse(cleanedText);
+  } catch (error) {
+    console.error("Error analyzing behavioral response:", error);
+    throw new Error("Failed to analyze response");
+  }
+}
+
+export async function saveBehavioralResult(results) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const avgScore = results.reduce((acc, r) => acc + r.score, 0) / results.length;
+
+  try {
+    const assessment = await db.assessment.create({
+      data: {
+        userId: user.id,
+        quizScore: avgScore,
+        category: "Behavioral",
+        questions: results.map(r => ({
+          question: r.question,
+          userAnswer: r.transcript,
+          feedback: r.feedback,
+          score: r.score,
+          starAnalysis: r.starAnalysis,
+        })),
+      },
+    });
+    return assessment;
+  } catch (error) {
+    console.error("Error saving behavioral result:", error);
+    throw new Error("Failed to save result");
+  }
+}

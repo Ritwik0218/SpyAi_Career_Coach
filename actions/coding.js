@@ -52,3 +52,47 @@ INSTRUCTIONS:
     throw new Error("Failed to get response from AI Tutor.");
   }
 }
+
+export async function generateCategoryCheatsheet(category, language, problems) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const problemTitles = problems.map(p => p.title).join(", ");
+
+  const prompt = `You are an expert Data Structures and Algorithms instructor.
+Create a comprehensive, premium cheatsheet for the NeetCode category "\${category}" using the \${language} programming language.
+
+The problems in this category are: \${problemTitles}.
+
+Structure the Markdown output exactly like this:
+# \${category} Cheatsheet (\${language})
+
+## 🧠 Core Concepts & Patterns
+Explain the fundamental concepts, data structures, and algorithmic patterns used to solve problems in this category. Be concise but extremely insightful.
+
+## 🛠️ Common Boilerplate / Templates
+Provide 1-2 standard code templates or patterns in \${language} that are frequently used in this category (e.g., standard sliding window template, standard DFS template).
+
+## 🧩 Key Problems & Approaches
+For each of the main problems (\${problemTitles}):
+- **Problem**: Name
+- **Hint/Approach**: 1-2 sentences on the trick to solving it.
+- **Time & Space**: Big O complexity.
+- **Code Snippet**: The optimal core logic (doesn't have to be the full class, just the essential function) in \${language}.
+
+## 🎯 Quick Self-Quiz
+Provide 3 short, challenging multiple-choice or short-answer questions to test the user's understanding of this category's core concepts. Include the answers hidden at the very bottom.
+
+Make it extremely readable and formatted beautifully with markdown.
+`;
+
+  try {
+    const { getGeminiModel } = await import("@/lib/gemini");
+    const model = getGeminiModel();
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (err) {
+    console.error("Cheatsheet Generation Error:", err);
+    throw new Error("Failed to generate cheatsheet.");
+  }
+}

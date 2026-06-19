@@ -94,3 +94,42 @@ export async function getIndustryInsights(country = "Worldwide") {
 
   return industryInsight;
 }
+
+export async function generateCareerSyllabus(targetRole) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+    select: { industry: true, skills: true, experience: true }
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const prompt = `
+    The user's current industry is \${user.industry || 'unknown'}, with \${user.experience || 'some'} years of experience.
+    Their current skills are: \${user.skills?.join(', ') || 'none specified'}.
+    
+    They want to transition or level up to the following target role: "\${targetRole}".
+    
+    Perform a gap analysis between their current skills and the target role. 
+    Then generate a structured, 4-week learning syllabus to help them bridge this gap.
+    
+    Format the response as Markdown. Include:
+    - **Gap Analysis**: A brief summary of what they are missing.
+    - **Week 1-4 Roadmap**: Specific, actionable steps, concepts to learn, and project ideas.
+    - **Recommended Resources**: Types of courses or tools they should use.
+  `;
+
+  try {
+    const model = getGeminiModel();
+    if (!model) {
+      return `# Career Syllabus for ${targetRole}\n\n**Gap Analysis:** You need to learn the core skills for this role.\n\n**Week 1-4:** Focus on fundamentals, build a small project, and update your resume.\n\n*AI analysis unavailable due to missing configuration.*`;
+    }
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (error) {
+    console.error("Error generating career syllabus:", error);
+    throw new Error("Failed to generate syllabus.");
+  }
+}
