@@ -176,7 +176,6 @@ export default function Header() {
                   labelIcon={<User size={15} />}
                   href="/profile"
                 />
-                <UserButton.Action name="manageAccount" />
               </UserButton.MenuItems>
             </UserButton>
           </SignedIn>
@@ -208,7 +207,6 @@ export default function Header() {
                   labelIcon={<User size={15} />}
                   href="/profile"
                 />
-                <UserButton.Action name="manageAccount" />
               </UserButton.MenuItems>
             </UserButton>
           </SignedIn>
