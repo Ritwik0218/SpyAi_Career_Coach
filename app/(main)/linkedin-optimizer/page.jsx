@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { optimizeLinkedInProfile } from "@/actions/linkedin";
+import { useState, useEffect } from "react";
+import { optimizeLinkedInProfile, getLinkedInAnalysis } from "@/actions/linkedin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload, Linkedin, CheckCircle, AlertTriangle, ChevronRight, FileText } from "lucide-react";
+import { Loader2, Upload, Linkedin, CheckCircle, AlertTriangle, ChevronRight, FileText, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import ReactMarkdown from "react-markdown";
@@ -17,6 +17,31 @@ export default function LinkedInOptimizerPage() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+  const [isFetching, setIsFetching] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      try {
+        const savedAnalysis = await getLinkedInAnalysis();
+        if (savedAnalysis) {
+          setAnalysis(savedAnalysis);
+        }
+      } catch (err) {
+        console.error("Failed to load saved analysis", err);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    fetchAnalysis();
+  }, []);
+
+  const handleCopy = (text, index) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    toast.success("Copied to clipboard!");
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
@@ -150,7 +175,16 @@ export default function LinkedInOptimizerPage() {
 
         {/* Results Section */}
         <div className="lg:col-span-2 space-y-6">
-          {!analysis && !loading && (
+          {isFetching && (
+            <Card className="h-full min-h-[400px] flex items-center justify-center bg-card/20 backdrop-blur-sm border-white/5">
+              <div className="flex flex-col items-center text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                <p>Loading your saved analysis...</p>
+              </div>
+            </Card>
+          )}
+
+          {!isFetching && !analysis && !loading && (
             <Card className="h-full min-h-[400px] flex items-center justify-center bg-card/20 backdrop-blur-sm border-white/5 border-dashed">
               <div className="text-center space-y-4 px-6 max-w-md">
                 <div className="w-20 h-20 bg-[#0A66C2]/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#0A66C2]/20 shadow-[0_0_30px_rgba(10,102,194,0.15)]">
@@ -164,7 +198,7 @@ export default function LinkedInOptimizerPage() {
             </Card>
           )}
 
-          {loading && (
+          {!isFetching && loading && (
             <Card className="h-full min-h-[400px] flex items-center justify-center bg-card/20 backdrop-blur-sm border-white/5">
               <div className="text-center space-y-6 max-w-md w-full px-8">
                 <div className="relative w-24 h-24 mx-auto">
@@ -182,7 +216,7 @@ export default function LinkedInOptimizerPage() {
             </Card>
           )}
 
-          {analysis && !loading && (
+          {!isFetching && analysis && !loading && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Score Card */}
               <Card className="bg-card/50 backdrop-blur-sm border-white/5 shadow-lg overflow-hidden">
@@ -251,13 +285,20 @@ export default function LinkedInOptimizerPage() {
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2 block">AI Suggestions</span>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {analysis.headline.suggestions.map((s, i) => (
-                        <li key={i} className="text-sm bg-primary/10 border border-primary/20 p-2.5 rounded text-primary-foreground flex gap-2 items-start">
-                          <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" />
-                          <div className="[&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white">
+                        <li key={`hl-${i}`} className="text-sm bg-primary/10 border border-primary/20 p-3 rounded-lg text-primary-foreground flex gap-3 items-start group">
+                          <ChevronRight className="h-4 w-4 mt-1 shrink-0" />
+                          <div className="flex-1 [&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white prose prose-invert prose-sm max-w-none">
                             <ReactMarkdown>{s}</ReactMarkdown>
                           </div>
+                          <button
+                            onClick={() => handleCopy(s, `hl-${i}`)}
+                            className="text-muted-foreground hover:text-white transition-colors p-1 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Copy to clipboard"
+                          >
+                            {copiedIndex === `hl-${i}` ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -281,13 +322,20 @@ export default function LinkedInOptimizerPage() {
                   </div>
                   <div>
                     <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2 block">AI Suggestions</span>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {analysis.summary.suggestions.map((s, i) => (
-                        <li key={i} className="text-sm bg-muted/50 p-2.5 rounded border border-white/5 flex gap-2 items-start">
+                        <li key={`sum-${i}`} className="text-sm bg-muted/50 p-3 rounded-lg border border-white/5 flex gap-3 items-start group">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                          <div className="[&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white">
+                          <div className="flex-1 [&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white prose prose-invert prose-sm max-w-none">
                             <ReactMarkdown>{s}</ReactMarkdown>
                           </div>
+                          <button
+                            onClick={() => handleCopy(s, `sum-${i}`)}
+                            className="text-muted-foreground hover:text-white transition-colors p-1 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Copy to clipboard"
+                          >
+                            {copiedIndex === `sum-${i}` ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -307,13 +355,20 @@ export default function LinkedInOptimizerPage() {
                     <div className="text-sm text-gray-300 [&>p]:mb-2 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white">
                       <ReactMarkdown>{analysis.experience.feedback}</ReactMarkdown>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3 mt-4">
                       {analysis.experience.suggestions.map((s, i) => (
-                        <li key={i} className="text-sm flex gap-2 items-start">
+                        <li key={`exp-${i}`} className="text-sm flex gap-3 items-start group p-2 hover:bg-white/5 rounded-lg transition-colors">
                           <div className="h-1.5 w-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></div>
-                          <div className="text-muted-foreground [&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white">
+                          <div className="flex-1 text-muted-foreground [&>p]:mb-1 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:ml-4 [&_strong]:text-white prose prose-invert prose-sm max-w-none">
                             <ReactMarkdown>{s}</ReactMarkdown>
                           </div>
+                          <button
+                            onClick={() => handleCopy(s, `exp-${i}`)}
+                            className="text-muted-foreground hover:text-white transition-colors p-1 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Copy to clipboard"
+                          >
+                            {copiedIndex === `exp-${i}` ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                          </button>
                         </li>
                       ))}
                     </ul>

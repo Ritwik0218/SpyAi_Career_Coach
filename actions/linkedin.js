@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getGeminiModel } from "@/lib/gemini";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import { db } from "@/lib/prisma";
 
 export async function optimizeLinkedInProfile(formData) {
   const { userId } = await auth();
@@ -76,9 +77,55 @@ export async function optimizeLinkedInProfile(formData) {
     if (rawText.endsWith('\`\`\`')) rawText = rawText.slice(0, -3);
     
     const analysis = JSON.parse(rawText.trim());
+    
+    // Save to DB
+    const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+    if (!user) throw new Error("User not found");
+
+    await db.linkedInAnalysis.upsert({
+      where: { userId: user.id },
+      update: {
+        overallScore: analysis.overallScore,
+        headline: analysis.headline,
+        summary: analysis.summary,
+        experience: analysis.experience,
+        skills: analysis.skills,
+      },
+      create: {
+        userId: user.id,
+        overallScore: analysis.overallScore,
+        headline: analysis.headline,
+        summary: analysis.summary,
+        experience: analysis.experience,
+        skills: analysis.skills,
+      }
+    });
+
     return analysis;
   } catch (error) {
     console.error("Gemini Error:", error);
     throw new Error("Failed to analyze the profile using AI. Please try again.");
   }
+}
+
+export async function getLinkedInAnalysis() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  if (!user) return null;
+
+  const analysis = await db.linkedInAnalysis.findUnique({
+    where: { userId: user.id }
+  });
+
+  if (!analysis) return null;
+
+  return {
+    overallScore: analysis.overallScore,
+    headline: analysis.headline,
+    summary: analysis.summary,
+    experience: analysis.experience,
+    skills: analysis.skills,
+  };
 }
