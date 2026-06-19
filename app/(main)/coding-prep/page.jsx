@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function CodingPrepDashboard() {
   const [solvedIds, setSolvedIds] = useState(() => {
@@ -254,10 +257,10 @@ export default function CodingPrepDashboard() {
               <Button 
                 onClick={handleGenerateCheatsheet} 
                 disabled={generatingCheat}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md font-medium text-base h-11 px-8"
               >
                 {generatingCheat ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Study Guide...</>
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Generating Study Guide...</>
                 ) : (
                   "Generate Cheatsheet"
                 )}
@@ -265,21 +268,45 @@ export default function CodingPrepDashboard() {
 
               {cheatsheetData && (
                 <div className="mt-8 relative">
-                  <div className="flex justify-end gap-2 mb-2">
-                    <Button variant="outline" size="sm" onClick={handleDownloadMarkdown} className="gap-2">
+                  <div className="flex justify-end gap-3 mb-4">
+                    <Button variant="outline" size="sm" onClick={handleDownloadMarkdown} className="gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm">
                       <FileText className="h-4 w-4" /> Download .MD
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="gap-2 text-indigo-500 border-indigo-200 hover:bg-indigo-50">
+                    <Button variant="default" size="sm" onClick={handleDownloadPDF} className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm border-0">
                       <Download className="h-4 w-4" /> Download PDF
                     </Button>
-                    <Button variant="secondary" size="sm" onClick={handleCopyCheatsheet} className="gap-2">
-                      {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                      {copied ? "Copied" : "Copy"}
+                    <Button variant="secondary" size="sm" onClick={handleCopyCheatsheet} className="gap-2 shadow-sm">
+                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      {copied ? "Copied!" : "Copy"}
                     </Button>
                   </div>
-                  <div className="p-8 bg-card rounded-lg border shadow-sm" id="cheatsheet-content">
-                    <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-                      <ReactMarkdown>{cheatsheetData}</ReactMarkdown>
+                  <div className="p-8 bg-card rounded-xl border border-muted shadow-sm ring-1 ring-black/5 dark:ring-white/5" id="cheatsheet-content">
+                    <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          code({ node, inline, className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(className || "");
+                            return !inline && match ? (
+                              <SyntaxHighlighter
+                                style={oneDark}
+                                language={match[1]}
+                                PreTag="div"
+                                className="rounded-lg shadow-sm !my-6 border border-muted/20"
+                                {...props}
+                              >
+                                {String(children).replace(/\n$/, "")}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <code className={`${className} bg-muted/60 px-1.5 py-0.5 rounded-md text-sm font-mono text-primary`} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                        }}
+                      >
+                        {cheatsheetData}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 </div>
