@@ -2,307 +2,415 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ArrowRight,
-  Trophy,
-  Target,
-  Sparkles,
-  CheckCircle2,
+  ArrowRight, Sparkles, CheckCircle2, Star, Timer, Trophy,
+  FileText, Mail, Globe, Calculator, Linkedin, Brain, BarChart3,
+  Briefcase, ChevronDown, Zap, Shield, Users, TrendingUp,
 } from "lucide-react";
-import HeroSection from "@/components/hero";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import Image from "next/image";
-import { features } from "@/data/features";
-import { testimonial } from "@/data/testimonial";
-import { faqs } from "@/data/faqs";
-import { howItWorks } from "@/data/howItWorks";
 
-// Premium Feature Card Component
-const FeatureCard = ({ feature, index }) => {
-  return (
-    <div className="relative group h-full">
-      <Card className="relative h-full flex flex-col border-white/5 bg-black/40 backdrop-blur-sm overflow-hidden transition-all duration-500 ease-out hover:border-white/20 hover:bg-white/[0.02]">
-        
-        {/* Ambient Top Glow on Hover */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-px bg-gradient-to-r from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-500/50 transition-all duration-500" />
-        
-        <CardContent className="p-8 flex flex-col items-center text-center relative z-10 flex-grow">
-          {/* Elegant Icon Container */}
-          <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10 text-gray-400 group-hover:text-indigo-400 group-hover:border-indigo-500/30 group-hover:bg-indigo-500/10 transition-all duration-500 transform group-hover:scale-110 shadow-[0_0_0_rgba(79,70,229,0)] group-hover:shadow-[0_0_20px_rgba(79,70,229,0.15)]">
-            {feature.icon}
-          </div>
-          
-          <h3 className="text-xl font-semibold mb-3 text-white tracking-tight">
-            {feature.title}
-          </h3>
-          
-          <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors duration-500">
-            {feature.description}
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+// ─── Data ───────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: <FileText className="w-6 h-6" />, title: "AI Resume Builder", desc: "ATS-optimized resumes with real-time scoring. Beat the bots, impress the humans.", tag: "Free" },
+  { icon: <Brain className="w-6 h-6" />, title: "Interview Coach", desc: "Practice behavioral & technical questions with live AI feedback.", tag: "Free" },
+  { icon: <BarChart3 className="w-6 h-6" />, title: "Industry Insights", desc: "Real salary ranges, growth trends, and top skills — by role and city.", tag: "Free" },
+  { icon: <Briefcase className="w-6 h-6" />, title: "Job Tracker", desc: "Track every application, interview, and follow-up in one command center.", tag: "Free" },
+  { icon: <Globe className="w-6 h-6" />, title: "Portfolio Builder", desc: "Generate a stunning personal website from your resume in one click.", tag: "PRO" },
+  { icon: <Mail className="w-6 h-6" />, title: "Cold Email Generator", desc: "AI-crafted outreach emails personalized to any company and hiring manager.", tag: "PRO" },
+  { icon: <Linkedin className="w-6 h-6" />, title: "LinkedIn Optimizer", desc: "Upload your PDF export and get a detailed profile overhaul strategy.", tag: "PRO" },
+  { icon: <Calculator className="w-6 h-6" />, title: "Offer Evaluator", desc: "Break down TC, equity, and bonuses. Get an AI negotiation email instantly.", tag: "PRO" },
+];
 
-// Animated Counter Component
-const AnimatedCounter = ({ end, duration = 2000, suffix = "" }) => {
-  const [count, setCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const counterRef = useRef(null);
+const TESTIMONIALS = [
+  { quote: "I applied to 12 companies and got 8 callbacks within 2 weeks. My resume's ATS score went from 52 to 94 using SPY AI.", author: "Arjun Sharma", role: "SDE-2 at Amazon", avatar: "AS", color: "from-blue-500 to-indigo-600" },
+  { quote: "The cold email generator helped me land a referral at Google. The email was so good, the recruiter forwarded it directly to the hiring manager.", author: "Priya Patel", role: "Product Manager at Flipkart", avatar: "PP", color: "from-pink-500 to-rose-600" },
+  { quote: "Used the offer evaluator before signing — negotiated ₹4.2L more in base salary. Best ₹999 I ever spent.", author: "Vikram Gupta", role: "Data Scientist at Swiggy", avatar: "VG", color: "from-purple-500 to-violet-600" },
+  { quote: "Generated my portfolio in under 60 seconds. Sent the link in my email signature and got compliments from every interviewer.", author: "Neha Reddy", role: "Frontend Engineer at Razorpay", avatar: "NR", color: "from-emerald-500 to-teal-600" },
+  { quote: "The behavioral interview prep felt like a real coaching session. It flagged weaknesses I didn't even know I had.", author: "Rahul Nair", role: "Engineering Manager at Zepto", avatar: "RN", color: "from-orange-500 to-amber-600" },
+  { quote: "LinkedIn optimizer doubled my profile views in 3 weeks. I started getting inbound DMs from recruiters instead of chasing them.", author: "Sneha Iyer", role: "UX Designer at Meesho", avatar: "SI", color: "from-sky-500 to-cyan-600" },
+];
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
+const FAQS = [
+  { q: "Is SPY AI free to use?", a: "Yes! The core tools — Resume Builder, Interview Coach, Job Tracker, and Industry Insights — are completely free forever. The PRO plan unlocks advanced features like the Portfolio Builder, Cold Email Generator, LinkedIn Optimizer, and Offer Evaluator." },
+  { q: "What does the PRO plan cost?", a: "SPY AI PRO is a one-time payment of ₹999 — not a monthly subscription. Pay once, get lifetime access to all current and future PRO features." },
+  { q: "Does it work for non-tech jobs too?", a: "Absolutely. SPY AI works for any industry — tech, finance, marketing, design, consulting, and more. The AI adapts its advice based on your specific role and industry." },
+  { q: "How is this different from ChatGPT?", a: "ChatGPT is a general-purpose assistant. SPY AI is purpose-built for career growth — with structured tools, resume parsing, ATS scoring, salary data, and a complete workflow built around getting you hired faster." },
+  { q: "Is my resume data private?", a: "Yes. Your data is encrypted, stored securely in a private database, and never shared or sold. Only you can access your resume and application data." },
+  { q: "Can I upgrade later?", a: "Yes, anytime. Start free and upgrade when you're ready. Your data is always preserved." },
+];
 
-    if (counterRef.current) {
-      observer.observe(counterRef.current);
-    }
+const COMPANIES = ["Google", "Amazon", "Microsoft", "Flipkart", "Razorpay", "Swiggy", "Zepto", "Meesho", "Paytm", "Infosys"];
 
-    return () => observer.disconnect();
-  }, [isVisible]);
+// ─── Countdown Timer ─────────────────────────────────────────────
+function useCountdown() {
+  const getEndTime = () => {
+    if (typeof window === "undefined") return new Date();
+    const stored = localStorage.getItem("spyai_launch_end");
+    if (stored) return new Date(stored);
+    const end = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
+    localStorage.setItem("spyai_launch_end", end.toISOString());
+    return end;
+  };
+
+  const [timeLeft, setTimeLeft] = useState({ h: "00", m: "00", s: "00" });
 
   useEffect(() => {
-    if (!isVisible) return;
-
-    let startTime;
-    let animationFrame;
-
-    const animate = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(Math.floor(end * easeOutQuart));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
+    const end = getEndTime();
+    const tick = () => {
+      const diff = end - Date.now();
+      if (diff <= 0) { setTimeLeft({ h: "00", m: "00", s: "00" }); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({
+        h: String(h).padStart(2, "0"),
+        m: String(m).padStart(2, "0"),
+        s: String(s).padStart(2, "0"),
+      });
     };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [isVisible, end, duration]);
+  return timeLeft;
+}
 
-  return (
-    <span ref={counterRef} className="text-4xl font-bold">
-      {count}{suffix}
-    </span>
-  );
-};
+// ─── Counter Animation ────────────────────────────────────────────
+function AnimatedCounter({ target, suffix = "" }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
 
-// Stats Section Component
-const StatsSection = () => {
-  const stats = [
-    { value: 50, suffix: "+", label: "Industries Covered" },
-    { value: 1000, suffix: "+", label: "Interview Questions" },
-    { value: 95, suffix: "%", label: "Success Rate" },
-    { value: 24, suffix: "/7", label: "AI Support" },
-  ];
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        let start = 0;
+        const step = target / 60;
+        const id = setInterval(() => {
+          start += step;
+          if (start >= target) { setCount(target); clearInterval(id); }
+          else setCount(Math.floor(start));
+        }, 20);
+        observer.disconnect();
+      }
+    }, { threshold: 0.3 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target]);
 
-  return (
-    <section className="w-full py-16 md:py-24 bg-[#0A0A0A] border-t border-white/5">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto text-center">
-          {stats.map((stat, index) => (
-            <div key={index} className="flex flex-col items-center justify-center space-y-2">
-              <div className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 mb-2 drop-shadow-sm">
-                <AnimatedCounter 
-                  end={stat.value} 
-                  suffix={stat.suffix}
-                  duration={800 + index * 50}
-                />
-              </div>
-              <p className="text-gray-400 font-medium tracking-wide text-sm md:text-base uppercase">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
 
+// ─── Main Page ────────────────────────────────────────────────────
 export default function LandingPage() {
+  const { h, m, s } = useCountdown();
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setActiveTestimonial(p => (p + 1) % TESTIMONIALS.length), 4000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <>
-      <div className="grid-background"></div>
+    <div className="min-h-screen bg-[#050510] text-white overflow-x-hidden">
 
-      {/* Hero Section */}
-      <HeroSection />
+      {/* ── Launch Offer Banner ── */}
+      <div className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 py-2.5 px-4 text-center text-sm font-medium">
+        <span className="mr-2">🔥 Launch Offer — PRO at just</span>
+        <span className="font-black text-yellow-300">₹999 (Regular ₹2,999)</span>
+        <span className="mx-2">· Ends in</span>
+        <span className="font-mono font-black text-yellow-300">{h}:{m}:{s}</span>
+        <Link href="/pricing" className="ml-3 underline underline-offset-2 hover:text-yellow-300 transition-colors">Grab it →</Link>
+      </div>
 
-      {/* Features Section */}
-      <section className="w-full py-16 md:py-24 lg:py-32 bg-[#0A0A0A] relative overflow-hidden border-t border-white/5">
-        {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A] via-indigo-950/5 to-[#0A0A0A] opacity-50" />
-        
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
-              The Engineering Toolkit
-            </h2>
-            <p className="text-gray-400 mt-2 max-w-xl mx-auto text-sm md:text-base font-medium">
-              Elite AI-powered tools covering every stage of your engineering job hunt — from your algorithms to your final offer.
-            </p>
-            <div className="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded-full mt-6 opacity-80" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} index={index} />
-            ))}
-          </div>
+      {/* ── Hero ── */}
+      <section className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-16 pb-24 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-indigo-600/10 blur-[120px]" />
+          <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-violet-600/8 blur-[100px]" />
+          <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/8 blur-[100px]" />
         </div>
-      </section>
 
-      {/* Stats Section */}
-      <StatsSection />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
+          backgroundSize: "64px 64px"
+        }} />
 
-      {/* How It Works Section */}
-      <section className="w-full py-16 md:py-24 bg-[#0A0A0A] border-t border-white/5">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-white">How It Works</h2>
-            <p className="text-gray-400 font-medium">
-              Four structured phases to accelerate your engineering career growth.
-            </p>
+        <div className="relative z-10 max-w-5xl mx-auto space-y-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium backdrop-blur-sm">
+            <Sparkles className="h-3.5 w-3.5" />
+            Powered by Google Gemini AI
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {howItWorks.map((item, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center text-center space-y-5"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shadow-[0_0_20px_rgba(79,70,229,0.1)]">
-                  {item.icon}
-                </div>
-                <h3 className="font-bold text-xl text-white tracking-tight">{item.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          {/* Headline */}
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-[1.05]">
+            Land Your Dream Job
+            <br />
+            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+              10× Faster with AI
+            </span>
+          </h1>
 
-      <section className="w-full py-16 md:py-24 bg-[#0A0A0A] border-t border-white/5 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-[#0A0A0A] to-[#0A0A0A] pointer-events-none" />
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <h2 className="text-3xl font-extrabold text-center mb-16 text-white tracking-tight">
-            What Our Users Say
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonial.map((testimonial, index) => (
-              <Card key={index} className="bg-black/40 border-white/5 backdrop-blur-sm hover:border-white/10 transition-colors">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="relative h-12 w-12 flex-shrink-0">
-                        <Image
-                          width={40}
-                          height={40}
-                          src={testimonial.image}
-                          alt={testimonial.author}
-                          className="rounded-full object-cover border-2 border-indigo-500/30"
-                          onError={(e) => {
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.author)}&background=4f46e5&color=fff&size=40`;
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{testimonial.author}</p>
-                        <p className="text-sm text-gray-400">
-                          {testimonial.role}
-                        </p>
-                        <p className="text-sm text-indigo-400 font-medium">
-                          {testimonial.company}
-                        </p>
-                      </div>
-                    </div>
-                    <blockquote>
-                      <p className="text-gray-300 italic relative leading-relaxed">
-                        <span className="text-4xl text-indigo-500/20 absolute -top-4 -left-4 font-serif">
-                          &quot;
-                        </span>
-                        {testimonial.quote}
-                        <span className="text-4xl text-indigo-500/20 absolute -bottom-6 -right-2 font-serif">
-                          &quot;
-                        </span>
-                      </p>
-                    </blockquote>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
+            SPY AI is the all-in-one career acceleration platform — resume builder, interview coach, portfolio generator, salary negotiator, and more. Built for India's top talent.
+          </p>
 
-      {/* FAQ Section */}
-      <section className="w-full py-16 md:py-24 bg-[#0A0A0A] border-t border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-900/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-extrabold mb-4 text-white tracking-tight">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-gray-400 font-medium">
-              Everything you need to know about the SPY AI Engine.
-            </p>
-          </div>
-
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="text-left">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent>{faq.answer}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="w-full bg-[#0A0A0A] py-16 md:py-24 px-4">
-        <div className="mx-auto max-w-5xl rounded-3xl overflow-hidden relative border border-white/10 bg-black/50 shadow-[0_0_50px_rgba(79,70,229,0.15)]">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-violet-600/10 to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/10 to-transparent pointer-events-none" />
-          
-          <div className="flex flex-col items-center justify-center space-y-6 text-center py-20 px-6 relative z-10">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
-              Ready to Command Your Career?
-            </h2>
-            <p className="mx-auto max-w-[600px] text-gray-300 md:text-xl font-medium">
-              Build your resume, conquer your interviews, and negotiate top-tier compensation — powered by elite AI.
-            </p>
-            <Link href="/dashboard" passHref>
-              <Button
-                size="lg"
-                className="h-14 mt-8 px-8 bg-white text-black hover:bg-gray-200 rounded-full font-semibold transition-all group shadow-[0_0_30px_rgba(255,255,255,0.15)]"
-              >
-                <span>Initialize SPY AI Engine</span>
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Link href="/sign-up">
+              <Button size="lg" className="h-14 px-8 text-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-[0_0_40px_rgba(99,102,241,0.3)] hover:shadow-[0_0_60px_rgba(99,102,241,0.5)] transition-all duration-300 rounded-xl font-bold">
+                Start Free — No Credit Card
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/pricing">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white/10 text-white hover:bg-white/5 rounded-xl font-semibold backdrop-blur-sm">
+                View PRO Features
               </Button>
             </Link>
           </div>
+
+          {/* Trust signals */}
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-gray-400 text-sm">
+            {["✅ Free forever plan", "✅ No subscription — Pay once", "✅ Privacy-first"].map((t, i) => (
+              <span key={i} className="font-medium">{t}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="h-6 w-6 text-gray-600" />
         </div>
       </section>
-    </>
+
+      {/* ── Social Proof Stats ── */}
+      <section className="border-y border-white/5 bg-white/[0.02] py-14 px-4">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {[
+            { n: 2400, suffix: "+", label: "Professionals Joined" },
+            { n: 8500, suffix: "+", label: "Resumes Generated" },
+            { n: 94, suffix: "%", label: "Avg ATS Score Increase" },
+            { n: 999, suffix: "", label: "One-time PRO Price (₹)" },
+          ].map(({ n, suffix, label }, i) => (
+            <div key={i} className="space-y-2">
+              <div className="text-4xl md:text-5xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                <AnimatedCounter target={n} suffix={suffix} />
+              </div>
+              <p className="text-gray-400 text-sm font-medium">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Hired At Banner ── */}
+      <section className="py-10 px-4 overflow-hidden">
+        <p className="text-center text-gray-500 text-sm font-medium uppercase tracking-widest mb-8">Users hired at top companies</p>
+        <div className="flex gap-12 animate-[marquee_20s_linear_infinite] whitespace-nowrap">
+          {[...COMPANIES, ...COMPANIES].map((c, i) => (
+            <span key={i} className="text-gray-600 font-bold text-lg hover:text-gray-400 transition-colors cursor-default flex-shrink-0">{c}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features Grid ── */}
+      <section className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium">
+              <Zap className="h-3.5 w-3.5" />
+              Everything You Need
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black">Your Entire Career, One Platform</h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">8 powerful AI tools working together to get you hired faster and paid more.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {FEATURES.map((f, i) => (
+              <div key={i} className="group relative p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-indigo-500/30 transition-all duration-300 cursor-default">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors">
+                    {f.icon}
+                  </div>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${f.tag === "PRO" ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
+                    {f.tag}
+                  </span>
+                </div>
+                <h3 className="font-bold text-white mb-2 text-lg">{f.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section className="py-24 px-4 bg-white/[0.01]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-sm font-medium">
+              <Star className="h-3.5 w-3.5 fill-current" />
+              Real Results, Real People
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black">They Got Hired. Now It's Your Turn.</h2>
+          </div>
+
+          {/* Featured Testimonial */}
+          <div className="relative mb-8 p-8 md:p-12 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] overflow-hidden min-h-[220px] transition-all duration-500">
+            <div className={`absolute inset-0 bg-gradient-to-br ${TESTIMONIALS[activeTestimonial].color} opacity-5`} />
+            <div className="relative z-10 max-w-3xl">
+              <div className="flex gap-1 mb-6">
+                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />)}
+              </div>
+              <p className="text-2xl md:text-3xl font-semibold text-white leading-relaxed mb-8">
+                "{TESTIMONIALS[activeTestimonial].quote}"
+              </p>
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${TESTIMONIALS[activeTestimonial].color} flex items-center justify-center font-black text-lg`}>
+                  {TESTIMONIALS[activeTestimonial].avatar}
+                </div>
+                <div>
+                  <p className="font-bold text-white">{TESTIMONIALS[activeTestimonial].author}</p>
+                  <p className="text-gray-400 text-sm">{TESTIMONIALS[activeTestimonial].role}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dots */}
+          <div className="flex items-center justify-center gap-2">
+            {TESTIMONIALS.map((_, i) => (
+              <button key={i} onClick={() => setActiveTestimonial(i)}
+                className={`rounded-full transition-all duration-300 ${i === activeTestimonial ? "w-6 h-2 bg-indigo-400" : "w-2 h-2 bg-white/20 hover:bg-white/40"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing CTA ── */}
+      <section className="py-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative p-1 rounded-3xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-500">
+            <div className="rounded-[22px] bg-[#080818] p-10 md:p-16 text-center space-y-8">
+              {/* Countdown */}
+              <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 text-sm font-medium">
+                <Timer className="h-4 w-4 animate-pulse" />
+                <span>Launch price ends in</span>
+                <span className="font-mono font-black text-white">{h}:{m}:{s}</span>
+              </div>
+
+              <div>
+                <h2 className="text-4xl md:text-6xl font-black mb-4">
+                  Everything for
+                  <br />
+                  <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">₹999</span>
+                  <span className="text-gray-600 line-through text-3xl ml-4">₹2,999</span>
+                </h2>
+                <p className="text-gray-400 text-xl">One-time payment. Lifetime access. No hidden fees.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto text-left">
+                {["Portfolio Builder", "Cold Email Generator", "LinkedIn Optimizer", "Offer & Equity Evaluator", "Unlimited AI Generations", "All Future PRO Features"].map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-gray-300">
+                    <CheckCircle2 className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+                    <span className="text-sm">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+                <Link href="/pricing">
+                  <Button size="lg" className="h-14 px-10 text-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-[0_0_50px_rgba(99,102,241,0.4)] rounded-xl font-black transition-all duration-300">
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Upgrade to PRO — ₹999
+                  </Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white/10 hover:bg-white/5 rounded-xl font-semibold">
+                    Start Free First
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="text-gray-600 text-sm flex items-center justify-center gap-2">
+                <Shield className="h-4 w-4" />
+                Secure payment via Razorpay · 100% encrypted
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-24 px-4 bg-white/[0.01]">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black">Frequently Asked</h2>
+            <p className="text-gray-400 text-xl">Everything you need to know before getting started.</p>
+          </div>
+          <Accordion type="single" collapsible className="space-y-3">
+            {FAQS.map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-white/5 bg-white/[0.02] rounded-xl px-6 data-[state=open]:border-indigo-500/30">
+                <AccordionTrigger className="text-left font-semibold text-white hover:no-underline hover:text-indigo-300 transition-colors py-5">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-400 leading-relaxed pb-5">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      {/* ── Final CTA ── */}
+      <section className="py-24 px-4 text-center">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <h2 className="text-4xl md:text-6xl font-black">
+            Your Next Offer is
+            <br />
+            <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Waiting For You</span>
+          </h2>
+          <p className="text-xl text-gray-400">Join 2,400+ professionals already accelerating their careers with SPY AI.</p>
+          <Link href="/sign-up">
+            <Button size="lg" className="h-16 px-12 text-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-[0_0_60px_rgba(99,102,241,0.4)] rounded-2xl font-black transition-all duration-300">
+              Get Started Free
+              <ArrowRight className="ml-3 h-6 w-6" />
+            </Button>
+          </Link>
+          <p className="text-gray-600 text-sm">No credit card required · Free plan available forever</p>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/5 py-10 px-4 text-center text-gray-600 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-6 mb-6">
+          <Link href="/blog" className="hover:text-gray-400 transition-colors">Blog</Link>
+          <Link href="/pricing" className="hover:text-gray-400 transition-colors">Pricing</Link>
+          <Link href="/dashboard" className="hover:text-gray-400 transition-colors">Dashboard</Link>
+          <Link href="/sign-in" className="hover:text-gray-400 transition-colors">Sign In</Link>
+        </div>
+        <p>© 2025 SPY AI Career Coach · Built for India's Top Talent</p>
+      </footer>
+
+      {/* ── Marquee CSS ── */}
+      <style jsx global>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
   );
 }
