@@ -21,6 +21,7 @@ import {
   User,
   Globe,
   Calculator,
+  CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";

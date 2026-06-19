@@ -16,11 +16,11 @@ export async function GET(req) {
     // Vercel Cron secures the endpoint automatically if CRON_SECRET is set,
     // but we can also add a manual check if needed.
     const authHeader = req.headers.get("authorization");
-    if (process.env.CRON_SECRET && authHeader !== \`Bearer \${process.env.CRON_SECRET}\`) {
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized cron call" }, { status: 401 });
     }
 
-    const prompt = \`
+    const prompt = `
       You are an expert career coach writing for the SPY AI Career Blog.
       Generate a professional, highly engaging blog post about career advice.
       
@@ -34,7 +34,7 @@ export async function GET(req) {
       TITLE: [Your Title Here]
       
       [Your Markdown Body Here]
-    \`;
+    `;
 
     const model = getGeminiModel();
     const result = await model.generateContent(prompt);

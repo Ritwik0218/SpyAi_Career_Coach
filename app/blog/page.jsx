@@ -27,7 +27,7 @@ export default async function BlogPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
-            <Link key={post.id} href={\`/blog/\${post.id}\`} className="group">
+            <Link key={post.id} href={`/blog/${post.id}`} className="group">
               <Card className="overflow-hidden border-border/50 h-full hover:shadow-lg transition-all card-lift">
                 <div className="relative w-full h-48 overflow-hidden bg-muted">
                   <Image 
