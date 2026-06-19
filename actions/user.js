@@ -124,3 +124,44 @@ export async function getUserOnboardingStatus() {
     };
   }
 }
+
+export async function getUserProfile() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+    select: {
+      industry: true,
+      experience: true,
+      bio: true,
+      skills: true,
+    },
+  });
+
+  return user;
+}
+
+export async function clearUserCareerData() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  try {
+    const user = await db.user.update({
+      where: { clerkUserId: userId },
+      data: {
+        industry: null,
+        experience: null,
+        bio: null,
+        skills: [],
+      },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { success: true, user };
+  } catch (error) {
+    console.error("Error clearing career data:", error.message);
+    throw new Error("Failed to clear career data");
+  }
+}
