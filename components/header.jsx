@@ -56,6 +56,8 @@ const NAV_ITEMS = [
       { href: "/ai-cover-letter", label: "Cover Letter", icon: PenBox, description: "AI-generated, fully editable" },
       { href: "/linkedin-optimizer", label: "LinkedIn Optimizer", icon: Linkedin, description: "Profile SEO & Visibility" },
       { href: "/networking", label: "Cold Emails", icon: PenBox, description: "AI Networking Email Generator" },
+      { href: "/portfolio", label: "Portfolio Builder", icon: Globe, description: "1-Click Personal Website" },
+      { href: "/offer-evaluator", label: "Offer Evaluator", icon: Calculator, description: "TC & Equity Math" },
       { href: "/dashboard", label: "Industry Insights", icon: BarChart3, description: "Salary trends & market data" },
     ],
   },
