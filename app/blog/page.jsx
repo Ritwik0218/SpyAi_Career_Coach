@@ -12,7 +12,7 @@ export default async function BlogPage() {
   });
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-6xl min-h-screen">
+    <div className="container mx-auto pt-24 pb-12 px-4 max-w-6xl min-h-screen">
       <div className="text-center mb-16 space-y-4">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Career Advice Blog</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

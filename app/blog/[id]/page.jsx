@@ -19,7 +19,7 @@ export default async function BlogPostPage({ params }) {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-3xl min-h-screen">
+    <div className="container mx-auto pt-24 pb-12 px-4 max-w-3xl min-h-screen">
       <Link href="/blog" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-8 transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to all articles
